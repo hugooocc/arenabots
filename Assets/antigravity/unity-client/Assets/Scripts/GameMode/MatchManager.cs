@@ -21,8 +21,8 @@ namespace Antigravity.GameMode
             // Real-time diagnostic on screen
             if (countdownLabel != null && Antigravity.Auth.GameSession.CurrentGameId != "singleplayer")
             {
-                var localPlayers = FindObjectsOfType<PlayerMovement>();
-                var remotePlayers = FindObjectsOfType<Antigravity.Network.NetworkPlayer>();
+                var localPlayers = FindObjectsByType<Antigravity.Player.PlayerMovement>(FindObjectsSortMode.None);
+                var remotePlayers = FindObjectsByType<Antigravity.Network.NetworkPlayer>(FindObjectsSortMode.None);
                 
                 string debugInfo = $"PROBANDO MULTIJUGADOR\n" +
                                    $"Local: {localPlayers.Length} | Remotos: {remotePlayers.Length}\n" +
