@@ -16,6 +16,33 @@ namespace Antigravity.GameMode
         // Stored so we can unsubscribe it later
         private System.Action onNetworkConnectedHandler;
 
+        private void Update()
+        {
+            // Real-time diagnostic on screen
+            if (countdownLabel != null && Antigravity.Auth.GameSession.CurrentGameId != "singleplayer")
+            {
+                var localPlayers = FindObjectsOfType<PlayerMovement>();
+                var remotePlayers = FindObjectsOfType<Antigravity.Network.NetworkPlayer>();
+                
+                string debugInfo = $"PROBANDO MULTIJUGADOR\n" +
+                                   $"Local: {localPlayers.Length} | Remotos: {remotePlayers.Length}\n" +
+                                   $"Tu ID: {Antigravity.Auth.GameSession.UserId}";
+                
+                // Only show this if match hasn't started or for debugging
+                if (countdownLabel.text.Contains("ESPERANDO") || countdownLabel.text.Contains("CONTADOR")) {
+                    // Stay as is
+                } else {
+                    // Update small debug text elsewhere? Let's just use the label for now as a big overlay
+                    // countdownLabel.text = debugInfo; 
+                }
+                
+                // Perform a periodic check to log state
+                if (Time.frameCount % 300 == 0) {
+                    Debug.Log($"[DIAGNOSTIC] Clients in Scene: Local={localPlayers.Length}, Remote={remotePlayers.Length}");
+                }
+            }
+        }
+
         private void Start()
         {
             // ¡Detectamos los componentes automáticamente para que no tengas que arrastrar nada!
