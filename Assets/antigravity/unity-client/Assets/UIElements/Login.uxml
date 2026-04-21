@@ -1,0 +1,19 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="GlobalStyles.uss" />
+    <Style src="LoginStyles.uss" />
+    <ui:VisualElement class="login-container" style="flex-grow: 1; background-color: #050a0f; align-items: center; justify-content: center;">
+        <ui:Label text="ARENA BOTS" class="cyber-title" style="margin-bottom: 20px;" />
+        <ui:VisualElement class="cyber-panel" style="width: 450px;">
+            <ui:Label text="AUTENTICACIÓN" class="section-title" style="color: #00f2ff; margin-bottom: 20px;" />
+            <ui:TextField label="USUARIO" name="username-input" class="cyber-input input-field" />
+            <ui:TextField password="true" label="CONTRASEÑA" name="password-input" class="cyber-input input-field" />
+            
+            <ui:VisualElement style="flex-direction: row; justify-content: space-between; margin-top: 10px;">
+                <ui:Button text="ACCEDER" name="login-button" class="cyber-button cyber-button-primary" style="flex-basis: 48%;" />
+                <ui:Button text="REGISTRO" name="register-button" class="cyber-button" style="flex-basis: 48%;" />
+            </ui:VisualElement>
+            
+            <ui:Label text="" name="status-label" style="color: #ff4655; -unity-font-style: bold; -unity-text-align: middle-center; margin-top: 15px;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

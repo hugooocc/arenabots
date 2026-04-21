@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ui="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements"
+    xsi:noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd"
+>
+    <!-- End Game Screen Layer -->
+    <ui:VisualElement name="end-game-screen" style="width: 100%; height: 100%; justify-content: center; align-items: center; background-color: rgba(0, 0, 0, 0.85); display: none;">
+        
+        <ui:Label text="GAME OVER" style="font-size: 72px; color: #FF4444; -unity-font-style: bold; margin-bottom: 20px;" />
+        
+        <ui:Label name="final-stats-label" text="Mobs Killed: 0" style="font-size: 36px; color: white; margin-bottom: 40px;" />
+
+        <ui:Button name="btn-restart" text="Restart" style="font-size: 24px; padding: 15px 40px; margin-bottom: 20px; background-color: #4CAF50; color: white; border-radius: 8px;" />
+        
+        <ui:Button name="btn-main-menu" text="Main Menu" style="font-size: 24px; padding: 15px 40px; background-color: #2196F3; color: white; border-radius: 8px;" />
+
+    </ui:VisualElement>
+</ui:UXML>

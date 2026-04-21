@@ -1,0 +1,73 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="GlobalStyles.uss" />
+    <Style src="MainMenuStyles.uss" />
+    <ui:VisualElement class="main-container">
+        <ui:Label text="ARENA BOTS" class="cyber-title" />
+        
+        <!-- Mode Selection Panel -->
+        <ui:VisualElement class="cyber-panel" name="mode-selection-panel">
+            <ui:Button text="UN JUGADOR" name="btn-singleplayer" class="cyber-button cyber-button-primary" />
+            <ui:Button text="EN LÍNEA" name="btn-multiplayer" class="cyber-button" />
+            <ui:Button text="ESTADÍSTICAS" name="btn-stats" class="cyber-button" />
+        </ui:VisualElement>
+
+        <!-- Multiplayer Panel -->
+        <ui:VisualElement class="cyber-panel" name="multiplayer-panel" style="display: none;">
+            <ui:Button text="&lt; VOLVER" name="btn-back-multi" class="cyber-button cyber-danger-btn" />
+            
+            <ui:VisualElement class="multiplayer-content">
+                <!-- Create Room -->
+                <ui:VisualElement class="multiplayer-section">
+                    <ui:Label text="NOMBRE DE LA OPERACIÓN" class="cyber-input-label" />
+                    <ui:TextField name="game-name-input" class="cyber-input" />
+                    <ui:Toggle label="PRIVADA" name="game-is-private-toggle" class="cyber-toggle" />
+                    <ui:SliderInt label="JUGADORES" value="4" high-value="10" low-value="2" name="max-players-slider" class="cyber-slider" />
+                    <ui:Button text="INICIAR PROTOCOLO" name="create-button" class="cyber-button cyber-button-primary" />
+                </ui:VisualElement>
+                
+                <!-- Join Room -->
+                <ui:VisualElement class="multiplayer-section">
+                    <ui:Label text="SALAS ACTIVAS" class="section-title" />
+                    <ui:ScrollView name="games-scroll-view" class="games-list-view" />
+                    <ui:VisualElement class="multiplayer-actions">
+                        <ui:Button text="SYNC" name="refresh-button" class="cyber-button" />
+                        <ui:Button text="CÓDIGO" name="join-by-code-button" class="cyber-button" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- Stats Panel -->
+        <ui:VisualElement class="cyber-panel" name="stats-panel" style="display: none;">
+            <ui:Button text="&lt; VOLVER" name="btn-back-stats" class="cyber-button cyber-danger-btn" />
+            <ui:Label text="REGISTROS DE COMBATE" class="section-title" />
+            <ui:Label text="MOBS ELIMINADOS: 0" name="stat-mobs-killed" class="cyber-stat-label" />
+            <ui:Label text="TIEMPO RÉCORD: 00:00" name="stat-time-survived" class="cyber-stat-label" />
+            <ui:Label text="RANKING GLOBAL" class="section-title" style="margin-top: 20px;" />
+            <ui:ScrollView name="stats-scroll-view" />
+        </ui:VisualElement>
+
+        <!-- Modals -->
+        <ui:VisualElement name="join-modal" class="cyber-modal-overlay" style="display: none;">
+            <ui:VisualElement class="cyber-modal-content">
+                <ui:Label text="ACCESO RESTRINGIDO" class="section-title" style="color: #ff8c00;" />
+                <ui:Label text="Introduce el código de encriptación de la sala:" style="color: white; margin: 10px 0;" />
+                <ui:Label text="CÓDIGO DE ACCESO" class="cyber-input-label" />
+                <ui:TextField name="join-code-input" class="cyber-input" />
+                <ui:VisualElement style="flex-direction: row; justify-content: space-between;">
+                    <ui:Button text="ABORTAR" name="cancel-join-button" class="cyber-button" style="flex-basis: 48%;" />
+                    <ui:Button text="ACCEDER" name="confirm-join-button" class="cyber-button cyber-button-primary" style="flex-basis: 48%;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        
+        <ui:VisualElement name="created-modal" class="cyber-modal-overlay" style="display: none;">
+            <ui:VisualElement class="cyber-modal-content" style="align-items: center;">
+                <ui:Label text="SALA ESTABLECIDA" class="section-title" style="color: #00ff9d;" />
+                <ui:Label text="Código de enlace:" style="color: white; margin-bottom: 10px;" />
+                <ui:Label text="XXXXXX" name="created-code-label" class="cyber-title" style="font-size: 48px; letter-spacing: 15px; margin-bottom: 30px; color: #00ff9d;" />
+                <ui:Button text="COPIAR Y ENTRAR" name="copy-enter-button" class="cyber-button cyber-button-primary" style="width: 100%;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

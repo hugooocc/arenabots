@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ui="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements"
+    xsi:noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd"
+>
+    <!-- Contenedor principal que ocupa toda la pantalla -->
+    <ui:VisualElement style="width: 100%; height: 100%; position: absolute; left: 0; top: 0; right: 0; bottom: 0;">
+        
+        <!-- Incluimos el HUD del juego -->
+        <ui:Template name="GameHUD" src="GameHUD.uxml" />
+        <ui:Instance template="GameHUD" name="hud-instance" picking-mode="Ignore" style="flex-grow: 1; position: absolute; left: 0; top: 0; right: 0; bottom: 0;" />
+
+        <!-- Incluimos la Pantalla de Fin de Juego (oculta por defecto en el UXML / código) -->
+        <ui:Template name="EndGameScreen" src="EndGameScreen.uxml" />
+        <ui:Instance template="EndGameScreen" name="end-game-instance" picking-mode="Ignore" style="flex-grow: 1; position: absolute; left: 0; top: 0; right: 0; bottom: 0; display: none;" />
+        
+        <!-- Incluimos el Menú de Pausa (oculto por defecto) -->
+        <ui:Template name="PauseMenu" src="PauseMenu.uxml" />
+        <ui:Instance template="PauseMenu" name="pause-instance" picking-mode="Ignore" style="flex-grow: 1; position: absolute; left: 0; top: 0; right: 0; bottom: 0; display: none;" />
+
+    </ui:VisualElement>
+</ui:UXML>

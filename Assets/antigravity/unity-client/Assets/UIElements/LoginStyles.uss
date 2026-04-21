@@ -1,0 +1,101 @@
+.login-container {
+    flex-grow: 1;
+    background-color: #050a0f;
+    align-items: center;
+    justify-content: center;
+}
+
+.title-label {
+    font-size: 72px;
+    color: #f8fafc;
+    margin-bottom: 60px;
+    -unity-font-style: bold;
+    letter-spacing: 12px;
+    -unity-text-align: middle-center;
+}
+
+.login-panel {
+    width: 440px;
+    background-color: rgba(15, 25, 35, 0.7);
+    border-radius: 10px;
+    padding: 48px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.input-field {
+    margin-bottom: 24px;
+}
+
+.input-field > .unity-base-text-field__label {
+    color: rgba(248, 250, 252, 0.6);
+    font-size: 12px;
+    -unity-font-style: bold;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+}
+
+.input-field > .unity-base-text-field__input {
+    background-color: rgba(15, 23, 42, 0.4);
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.1);
+    padding: 12px 16px;
+    height: 52px;
+    color: #f8fafc;
+    font-size: 16px;
+    transition-duration: 0.2s;
+}
+
+.input-field > .unity-base-text-field__input:focus {
+    border-color: #00f2ff;
+}
+
+.button-container {
+    flex-direction: column;
+    margin-top: 32px;
+}
+
+.action-button {
+    height: 54px;
+    border-radius: 10px;
+    border-width: 0;
+    font-size: 16px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+    transition-duration: 0.2s;
+    margin-bottom: 12px;
+}
+
+.login-btn {
+    background-color: #00f2ff;
+    color: white;
+}
+
+.login-btn:hover {
+    background-color: #5df9ff;
+}
+
+.login-btn:active {
+    background-color: #00bac4;
+}
+
+.register-btn {
+    background-color: transparent;
+    color: rgba(248, 250, 252, 0.6);
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.register-btn:hover {
+    color: #f8fafc;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: #00f2ff;
+}
+
+.status-label {
+    margin-top: 32px;
+    font-size: 14px;
+    -unity-text-align: middle-center;
+    color: rgba(248, 250, 252, 0.6);
+}

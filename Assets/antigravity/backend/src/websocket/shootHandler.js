@@ -1,0 +1,127 @@
+const WebSocket = require('ws');
+const { v4: uuidv4 } = require('uuid');
+const PlayerSession = require('../models/PlayerSession');
+
+const players = new Map();
+
+/**
+ * Manejador WebSocket para eventos de disparo.
+ * Sigue la especificación en specs/shooting-system/spec.md
+ */
+function handleShoot(ws, data, wss) {
+    const { tipo, jugadorId, partidaId, posicion, direccion, timestamp } = data;
+
+    // 1.1 Escuchar mensajes de tipo "disparo"
+    if (tipo !== 'disparo') return;
+
+    // Validación de campos obligatorios
+    if (!jugadorId || !partidaId || !posicion || !direccion || !timestamp) {
+        console.warn(`[WS] Payload de disparo incompleto de ${jugadorId}`);
+        return;
+    }
+
+    // Obtener o crear sesión del jugador (simulado para este paso)
+    if (!players.has(jugadorId)) {
+        players.set(jugadorId, new PlayerSession(jugadorId));
+    }
+    const session = players.get(jugadorId);
+
+    // 1.3 Validar que el jugador está vivo (isAlive)
+    if (!session.isAlive) {
+        console.warn(`[WS] Disparo bloqueado: jugador muerto ${jugadorId}`);
+        return;
+    }
+
+    // 1.6 Aplicar límite de tasa: máx. 10 eventos/seg por jugador
+    // También maneja el caso límite de eventos duplicados (mismo timestamp)
+    if (!session.canFire(timestamp)) {
+        console.warn(`[WS] Disparo bloqueado: límite de tasa o duplicado para ${jugadorId}`);
+        return;
+    }
+
+    // 1.4 Validar que la dirección es un vector normalizado (módulo ~1.0 ± 0.05)
+    const magnitud = Math.sqrt(direccion.x * direccion.x + direccion.y * direccion.y);
+    if (magnitud < 0.95 || magnitud > 1.05) {
+        console.warn(`[WS] Disparo bloqueado: vector no normalizado mag=${magnitud} de ${jugadorId}`);
+        return;
+    }
+
+    // 1.5 Validar que la posición está dentro de los límites del mapa (Ej: 0-100 para este MVP)
+    if (posicion.x < -50 || posicion.x > 50 || posicion.y < -50 || posicion.y > 50) {
+        console.warn(`[WS] Disparo bloqueado: posición fuera de límites (${posicion.x}, ${posicion.y})`);
+        return;
+    }
+
+    // Registrar el disparo exitoso en la sesión
+    session.addFireTimestamp(timestamp);
+
+    // 1.7 Generar un proyectilId único (uuid)
+    const proyectilId = uuidv4();
+
+    // 1.8 Retransmitir disparo_retransmision a todos los clientes
+    const retransmision = {
+        tipo: 'disparo_retransmision',
+        jugadorId,
+        posicion: {
+            x: Number(posicion.x.toFixed(2)),
+            y: Number(posicion.y.toFixed(2))
+        },
+        direccion: {
+            x: Number(direccion.x.toFixed(2)),
+            y: Number(direccion.y.toFixed(2))
+        },
+        proyectilId
+    };
+
+    const payload = JSON.stringify(retransmision);
+    wss.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN && client.gameId === partidaId) {
+            client.send(payload);
+        }
+    });
+
+    console.log(`[WS] Disparo validado y retransmitido: ${proyectilId} de ${jugadorId}`);
+}
+
+const EnemyAI = require('../services/EnemyAI');
+
+function handleImpact(ws, data, wss) {
+    const { tipo, partidaId, enemigoId, dano } = data;
+
+    if (tipo !== 'impacto_proyectil') return;
+
+    try {
+        // 2. Procesar el daño en servidor
+        const nuevoHp = EnemyAI.damageEnemy(partidaId, enemigoId, dano);
+
+        if (nuevoHp !== null && typeof nuevoHp === 'number') {
+            console.log(`[WS] Zombie ${enemigoId.substring(0,6)} recibió ${dano} daño. HP restante: ${nuevoHp}`);
+            
+            if (nuevoHp <= 0) {
+                console.log(`[WS] Zombie ${enemigoId.substring(0,6)} murió.`);
+                
+                // Track stats
+                const killerId = ws.userId;
+                if (killerId && players.has(killerId)) {
+                    players.get(killerId).kills++;
+                    console.log(`[Stats] Killer: ${killerId}, Total Kills: ${players.get(killerId).kills}`);
+                }
+
+                const deathPayload = JSON.stringify({
+                    tipo: 'enemigo_muerto',
+                    enemigoId: enemigoId
+                });
+                
+                wss.clients.forEach(client => {
+                    if (client.readyState === WebSocket.OPEN && client.gameId === partidaId) {
+                        client.send(deathPayload);
+                    }
+                });
+            }
+        }
+    } catch (e) {
+        console.error("[WS] Error confirmando impacto:", e.message);
+    }
+}
+
+module.exports = { handleShoot, handleImpact, players };

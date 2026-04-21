@@ -1,0 +1,176 @@
+:root {
+}
+
+/* Base Utility Classes */
+.cyber-panel {
+    background-color: rgba(15, 25, 35, 0.7);
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.1);
+    border-left-width: 4px;
+    border-left-color: #00f2ff;
+    padding: 24px;
+}
+
+.cyber-button {
+    background-color: transparent;
+    color: #00f2ff;
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: rgba(0, 242, 255, 0.3);
+    padding: 14px 28px;
+    font-size: 18px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    transition-duration: 0.2s;
+    transition-property: background-color, border-color, scale, color;
+    letter-spacing: 2px;
+    margin: 5px;
+}
+
+.cyber-button:hover {
+    background-color: rgba(0, 242, 255, 0.1);
+    border-color: #5df9ff;
+    color: #f8fafc;
+    scale: 1.05;
+    cursor: link;
+}
+
+.cyber-button:active {
+    background-color: #00f2ff;
+    color: #050a0f;
+    scale: 0.98;
+}
+
+.cyber-button-primary {
+    background-color: #00f2ff;
+    color: #050a0f;
+    border-color: #00f2ff;
+}
+
+.cyber-button-primary:hover {
+    background-color: #5df9ff;
+    color: #050a0f;
+}
+
+.cyber-title {
+    color: #f8fafc;
+    font-size: 72px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    -unity-text-outline-width: 1px;
+    -unity-text-outline-color: #00f2ff;
+    letter-spacing: 10px;
+    margin-bottom: 40px;
+}
+
+.cyber-label-hud {
+    color: #00f2ff;
+    -unity-font-style: bold;
+    font-size: 36px;
+    -unity-text-outline-width: 0.5px;
+    -unity-text-outline-color: rgba(0, 242, 255, 0.5);
+}
+
+.cyber-input {
+    background-color: rgba(0, 0, 0, 0.4);
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.1);
+    padding: 2px; /* Reducción de padding en el contenedor raíz */
+    color: #f8fafc;
+    margin-bottom: 20px;
+    transition-duration: 0.2s;
+    min-height: 48px;
+}
+
+.cyber-input:hover {
+    border-color: #00f2ff;
+}
+
+/* Selector más robusto para la parte de entrada del campo de texto */
+.cyber-input .unity-base-text-field__input,
+.cyber-input .unity-text-input {
+    background-color: transparent;
+    border-width: 0;
+    color: #00f2ff;
+    font-size: 18px;
+    padding: 10px 15px;
+    flex-grow: 1;
+    -unity-text-align: middle-left;
+    cursor: text;
+    picking-mode: position; /* Ensure internal text element is pickable */
+}
+
+/* Estilo para los labels separados */
+.cyber-input-label {
+    color: rgba(0, 242, 255, 0.8);
+    font-size: 14px;
+    -unity-font-style: bold;
+    margin-bottom: 5px;
+    margin-left: 2px;
+    letter-spacing: 1px;
+}
+
+/* Modal System */
+.cyber-modal-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 5, 10, 0.9);
+    align-items: center;
+    justify-content: center;
+}
+
+.cyber-modal-content {
+    min-width: 500px;
+    background-color: #0f1923;
+    border-width: 2px;
+    border-color: #00f2ff;
+    padding: 40px;
+}
+
+/* ProgressBar Styling */
+.cyber-progress-bar {
+    height: 25px;
+    background-color: rgba(0, 0, 0, 0.4);
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: rgba(0, 242, 255, 0.3);
+}
+
+.cyber-progress-bar .unity-progress-bar__container {
+    background-color: transparent;
+    border-radius: 4px;
+}
+
+.cyber-progress-bar .unity-progress-bar__background {
+    background-color: transparent;
+    border-radius: 4px;
+}
+
+.cyber-progress-bar .unity-progress-bar__progress {
+    background-color: #00f2ff;
+    border-radius: 4px;
+    transition-duration: 0.3s;
+}
+
+.cyber-progress-bar .unity-progress-bar__title {
+    color: #f8fafc;
+    -unity-font-style: bold;
+    font-size: 14px;
+}
+
+/* Global Typography Correction */
+.unity-label {
+    color: #f8fafc; /* Forced white for readability */
+}
+
+.section-title {
+    color: #00f2ff; /* Neon Cyan for headers */
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+}
+
+.cyber-input .unity-base-text-field__input {
+    color: #00f2ff; /* Brighter input text */
+}

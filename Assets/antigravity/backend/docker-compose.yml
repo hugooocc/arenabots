@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: arena-mongo
+    ports:
+      - "27019:27017" # Exposes MongoDB to the host machine (changed to 27019 due to conflict on 27018)
+    volumes:
+      - mongo-data:/data/db # Persists the database data even if the container drops
+    restart: unless-stopped
+
+  # API Gateway (Public-facing)
+  gateway:
+    build: .
+    container_name: arena-gateway
+    command: npm run gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/arena_bots
+      - JWT_SECRET=your_super_secret_key_change_in_production
+    depends_on:
+      - auth
+      - game
+      - stats
+    restart: unless-stopped
+
+  # Auth Microservice
+  auth:
+    build: .
+    container_name: arena-auth
+    command: npm run auth
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/arena_bots
+      - JWT_SECRET=your_super_secret_key_change_in_production
+      - AUTH_PORT=3001
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+
+  # Game Microservice
+  game:
+    build: .
+    container_name: arena-game
+    command: npm run game
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/arena_bots
+      - JWT_SECRET=your_super_secret_key_change_in_production
+      - GAME_PORT=3002
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+
+  # Stats Microservice
+  stats:
+    build: .
+    container_name: arena-stats
+    command: npm run stats
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/arena_bots
+      - JWT_SECRET=your_super_secret_key_change_in_production
+      - STATS_PORT=3003
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+
+
+volumes:
+  mongo-data:

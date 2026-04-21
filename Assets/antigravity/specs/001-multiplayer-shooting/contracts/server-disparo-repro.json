@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Server Shooting Retransmission",
+  "type": "object",
+  "properties": {
+    "tipo": { "type": "string", "const": "disparo_retransmision" },
+    "jugadorId": { "type": "string" },
+    "posicion": {
+      "type": "object",
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" }
+      },
+      "required": ["x", "y"]
+    },
+    "direccion": {
+      "type": "object",
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" }
+      },
+      "required": ["x", "y"]
+    },
+    "proyectilId": { "type": "string" }
+  },
+  "required": ["tipo", "jugadorId", "posicion", "direccion", "proyectilId"]
+}
