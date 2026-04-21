@@ -69,72 +69,67 @@ namespace Antigravity.Network
 
         private void SpawnRemotePlayer(string userId, string username)
         {
-            if (remotePlayers.ContainsKey(userId)) {
-                Debug.Log($"[MultiplayerSpawner] Player {userId} already spawned.");
-                return;
-            }
+            if (remotePlayers.ContainsKey(userId)) return;
 
-            // WARNING: If IDs are identical, it's probably local testing with same account.
-            // We allow it but with a warning to help the user.
-            bool isMe = userId == Antigravity.Auth.GameSession.UserId;
-            if (isMe) {
-                Debug.LogWarning($"[MultiplayerSpawner] Spawning a copy of MYSELF for testing purposes (UserId: {userId}). This shouldn't happen in production with different accounts.");
-            }
-
-            if (remotePlayerPrefab == null) {
-                Debug.LogError("[MultiplayerSpawner] CRITICAL: remotePlayerPrefab is NULL! Spawning aborted.");
-                return;
-            }
-
-            GameObject go = Instantiate(remotePlayerPrefab);
-            go.name = "REMOTE_" + username + "_" + userId;
-
-            NetworkPlayer np = go.AddComponent<NetworkPlayer>();
-            go.AddComponent<VisibilityPointer>();
-            np.userId = userId;
-            np.username = username;
-
-            // [FIX] PROXIMIDAD FORZADA: Ahora lo hacemos DESPUÉS de añadir NetworkPlayer
-            // para que FindAnyObjectByType no se confunda consigo mismo si busca por PlayerMovement
+            // [BEST STRATEGY] Clone the local player to ensure 100% visual parity
+            GameObject local = null;
             PlayerMovement[] allMovements = Object.FindObjectsByType<PlayerMovement>(FindObjectsSortMode.None);
             foreach(var pm in allMovements) {
-                if (pm.gameObject != go && pm.GetComponent<NetworkPlayer>() == null) {
-                    // Este es el local. Nos teletransportamos a su lado.
-                    go.transform.position = pm.transform.position + new Vector3(2f, 2f, 0);
-                    Debug.Log($"[MultiplayerSpawner] Teletransportando remoto {username} al lado del local {pm.gameObject.name} en {go.transform.position}");
+                if (pm.GetComponent<NetworkPlayer>() == null) {
+                    local = pm.gameObject;
                     break;
                 }
             }
 
-            // EMERGENCY DIAGNOSTIC: Paint ALL SpriteRenderers RED
+            GameObject go;
+            if (local != null) {
+                go = Instantiate(local);
+                Debug.Log($"[MultiplayerSpawner] Cloned LOCAL player for {username}");
+            } else {
+                if (remotePlayerPrefab == null) return;
+                go = Instantiate(remotePlayerPrefab);
+                Debug.Log($"[MultiplayerSpawner] Fallback to prefab for {username}");
+            }
+
+            go.name = "REMOTE_" + username + "_" + userId;
+            NetworkPlayer np = go.AddComponent<NetworkPlayer>();
+            np.userId = userId;
+            np.username = username;
+
+            // Teleport to side of local
+            if (local != null) {
+                go.transform.position = local.transform.position + new Vector3(2f, 2f, 0);
+            }
+
+            // CLEANUP: Remove ALL components that shouldn't be on a remote doll
+            // We do this by name or type to be thorough
+            var scriptsToDestroy = new System.Type[] {
+                typeof(Antigravity.Player.PlayerMovement),
+                typeof(Antigravity.Shooting.ShootController),
+                typeof(AudioListener),
+                typeof(Camera),
+                typeof(Antigravity.Network.PlayerNetworkSync)
+            };
+
+            foreach(var type in scriptsToDestroy) {
+                var comp = go.GetComponentInChildren(type);
+                if (comp != null) {
+                    if (comp is GameObject g) DestroyImmediate(g);
+                    else DestroyImmediate(comp);
+                }
+            }
+
+            // Ensure it's active and visible
+            go.SetActive(true);
             var renderers = go.GetComponentsInChildren<SpriteRenderer>();
             foreach(var r in renderers) {
-                r.color = Color.red; 
-                r.sortingOrder = 100; // SUPER TOP
+                r.enabled = true;
+                // We DON'T paint it red anymore, user wants original visuals
+                r.color = Color.white; 
             }
-
-            // ISOLATION: Destroy scripts instead of just disabling them to be 100% sure
-            var sync = go.GetComponent<Antigravity.Network.PlayerNetworkSync>();
-            if (sync != null) DestroyImmediate(sync);
-            
-            var movement = go.GetComponent<Antigravity.Player.PlayerMovement>();
-            if (movement != null) {
-                movement.canMove = false;
-                movement.enabled = false;
-            }
-
-            var shoot = go.GetComponent<Antigravity.Shooting.ShootController>();
-            if (shoot != null) shoot.enabled = false;
-
-            // Audio & Camera
-            Camera c = go.GetComponentInChildren<Camera>();
-            if (c != null) DestroyImmediate(c.gameObject);
-
-            AudioListener al = go.GetComponentInChildren<AudioListener>();
-            if (al != null) DestroyImmediate(al);
 
             remotePlayers.Add(userId, np);
-            Debug.Log($"[DIAGNOSTIC] Spawned RED remote player: {username} at {go.transform.position}");
+            Debug.Log($"[MultiplayerSpawner] Remote player REPLICATED: {username}");
         }
 
         private void RemoveRemotePlayer(string userId)
