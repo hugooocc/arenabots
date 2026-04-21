@@ -68,45 +68,41 @@ namespace Antigravity.Network
 
         private void SpawnRemotePlayer(string userId, string username)
         {
-            if (remotePlayers.ContainsKey(userId)) return;
+            if (remotePlayers.ContainsKey(userId)) {
+                Debug.Log($"[MultiplayerSpawner] Player {userId} already spawned.");
+                return;
+            }
 
-            // CRITICAL: If testing on the same account, they share the same ID.
-            if (userId == Antigravity.Auth.GameSession.UserId) {
-                Debug.LogWarning($"[MultiplayerSpawner] Refusing to spawn player with MY OWN UserId: {username} ({userId}). Are you testing with the same account in two clients?");
+            // WARNING: If IDs are identical, it's probably local testing with same account.
+            // We allow it but with a warning to help the user.
+            bool isMe = userId == Antigravity.Auth.GameSession.UserId;
+            if (isMe) {
+                Debug.LogWarning($"[MultiplayerSpawner] Spawning a copy of MYSELF for testing purposes (UserId: {userId}). This shouldn't happen in production with different accounts.");
+            }
+
+            if (remotePlayerPrefab == null) {
+                Debug.LogError("[MultiplayerSpawner] CRITICAL: remotePlayerPrefab is NULL! Spawning aborted.");
                 return;
             }
 
             GameObject go = Instantiate(remotePlayerPrefab, Vector3.zero, Quaternion.identity);
-            go.name = "RemotePlayer_" + username;
+            go.name = isMe ? "RemoteClone_OF_SELF" : "RemotePlayer_" + username;
             
             NetworkPlayer np = go.AddComponent<NetworkPlayer>();
             np.userId = userId;
             np.username = username;
 
-            // DISABLE ALL LOCAL CONTROL COMPONENTS
-            // 1. Movement logic
-            var movement = go.GetComponent<Antigravity.Player.PlayerMovement>();
-            if (movement != null) movement.enabled = false;
+            // ISOLATION: Remove or disable everything that could act on local input
+            // (Repeated logic from previously but even more thorough)
+            Transform cam = go.transform.Find("Main Camera");
+            if (cam != null) cam.gameObject.SetActive(false);
             
-            // 2. Shooting logic
-            var shooting = go.GetComponent<Antigravity.Shooting.ShootController>();
-            if (shooting != null) shooting.enabled = false;
-
-            // 3. Audio & Camera (If the prefab has them)
-            var cam = go.GetComponentInChildren<Camera>();
-            if (cam != null) cam.enabled = false;
-
-            var listener = go.GetComponentInChildren<AudioListener>();
-            if (listener != null) listener.enabled = false;
-
-            // 4. Input components (New Input System)
-            var playerInput = go.GetComponent<UnityEngine.InputSystem.PlayerInput>();
-            if (playerInput != null) playerInput.enabled = false;
-
-            // 5. Physics Simulation (Crucial: remote players shouldn't be affected by gravity or collisions during sync)
-            var rb = go.GetComponent<Rigidbody2D>();
-            if (rb != null) {
-                rb.simulated = false; // Prevents collision physics but allows transform-based movement
+            var localScripts = go.GetComponentsInChildren<MonoBehaviour>();
+            foreach(var s in localScripts) {
+                // If the script is NOT NetworkPlayer, disable it.
+                if (!(s is NetworkPlayer) && !(s is SpriteRenderer) && !(s is Animator)) {
+                    s.enabled = false;
+                }
             }
 
             remotePlayers.Add(userId, np);

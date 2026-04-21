@@ -22,6 +22,14 @@ namespace Antigravity.Network
         {
             animator = GetComponentInChildren<Animator>();
             targetPosition = transform.position;
+
+            // PHYSICS ISOLATION:
+            Rigidbody2D rb = GetComponent<Rigidbody2D>();
+            if (rb != null) {
+                rb.bodyType = RigidbodyType2D.Kinematic;
+                rb.fullKinematicContacts = false;
+                rb.simulated = true; // Stay simulated but kinematic to allow manual movement
+            }
         }
 
         public void UpdateState(Vector2Payload position, Vector2Payload velocity, Vector2Payload looking)
