@@ -136,6 +136,7 @@ namespace Antigravity.Environment
             for (int i = 0; i < count; i++)
             {
                 GameObject prefab = decorPrefabs[Random.Range(0, decorPrefabs.Length)];
+                if (prefab == null) continue; // SEGURIDAD: Evitar crash por referencia perdida
                 
                 // Posición aleatoria dentro del chunk
                 float randomX = Random.Range(-halfSize, halfSize);

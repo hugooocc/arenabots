@@ -21,11 +21,17 @@ namespace Antigravity.GameMode
             // Persistent debug overlay using legacy GUI for guaranteed visibility
             if (Antigravity.Auth.GameSession.CurrentGameId != "singleplayer")
             {
-                var localPlayers = FindObjectsByType<Antigravity.Player.PlayerMovement>(FindObjectsSortMode.None);
-                var remotePlayers = FindObjectsByType<Antigravity.Network.NetworkPlayer>(FindObjectsSortMode.None);
+                var allMovements = FindObjectsByType<Antigravity.Player.PlayerMovement>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+                int activeLocalCount = 0;
+                foreach(var m in allMovements) {
+                    // Solo contamos el local real (el que no tiene NetworkPlayer)
+                    if (m.enabled && m.GetComponent<Antigravity.Network.NetworkPlayer>() == null) activeLocalCount++;
+                }
+
+                var remotePlayers = FindObjectsByType<Antigravity.Network.NetworkPlayer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
                 
                 string debugInfo = $"[ARENA BOTS MULTI-DEBUG]\n" +
-                                   $"Local Players: {localPlayers.Length}\n" +
+                                   $"Local Players: {activeLocalCount}\n" +
                                    $"Remote Players: {remotePlayers.Length}\n" +
                                    $"User ID: {Antigravity.Auth.GameSession.UserId}\n" +
                                    $"Errors: {string.Join(" | ", errorHistory)}";
@@ -175,8 +181,8 @@ namespace Antigravity.GameMode
         IEnumerator StartMatchCountdown()
         {
             // Find all players and disable their movement initially
-            Antigravity.Player.PlayerMovement[] players = FindObjectsByType<Antigravity.Player.PlayerMovement>(FindObjectsSortMode.None);
-            foreach(var p in players) p.canMove = false;
+            Antigravity.Player.PlayerMovement[] players = FindObjectsByType<Antigravity.Player.PlayerMovement>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+            foreach(var p in players) if(p.enabled) p.canMove = false;
 
             // Show container
             if (countdownContainer != null) countdownContainer.style.display = DisplayStyle.Flex;
