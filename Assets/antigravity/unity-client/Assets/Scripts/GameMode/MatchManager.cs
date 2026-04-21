@@ -139,14 +139,25 @@ namespace Antigravity.GameMode
                 // 3. IDENTIFY LOCAL PLAYER (HARDENED)
                 PlayerMovement[] allMovements = UnityEngine.Object.FindObjectsByType<PlayerMovement>(FindObjectsSortMode.None);
                 PlayerMovement localPlayer = null;
+                int localCount = 0;
 
                 foreach (var pm in allMovements)
                 {
                     // Un jugador local de verdad es aquel que tiene PlayerMovement PERO NO NetworkPlayer
                     if (pm.GetComponent<Antigravity.Network.NetworkPlayer>() == null)
                     {
-                        localPlayer = pm;
-                        break;
+                        if (localPlayer == null) 
+                        {
+                            localPlayer = pm;
+                        }
+                        else 
+                        {
+                            // ¡DUPLICADO DETECTADO! Lo borramos para evitar interferencias
+                            Debug.LogWarning("[MatchManager] ¡BORRANDO JUGADOR DUPLICADO! " + pm.gameObject.name);
+                            DestroyImmediate(pm.gameObject);
+                            continue;
+                        }
+                        localCount++;
                     }
                 }
 
@@ -160,7 +171,7 @@ namespace Antigravity.GameMode
                     {
                         localPlayer.gameObject.AddComponent<Antigravity.Network.PlayerNetworkSync>();
                     }
-                    Debug.Log($"[DIAGNOSTIC] Local player identified and synced: {localPlayer.gameObject.name}");
+                    Debug.Log($"[DIAGNOSTIC] Local player identified and synced: {localPlayer.gameObject.name} at {localPlayer.transform.position}");
                 }
                 else {
                     Debug.LogError("[MatchManager] CRITICAL: Local PlayerMovement NOT FOUND in scene! Movements available: " + allMovements.Length);

@@ -50,7 +50,7 @@ namespace Antigravity.Player
 
         private void FixedUpdate()
         {
-            if (!canMove) 
+            if (!canMove || GetComponent<Antigravity.Network.NetworkPlayer>() != null) 
             {
                 rb.linearVelocity = Vector2.zero;
                 return;

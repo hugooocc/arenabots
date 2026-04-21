@@ -85,18 +85,25 @@ namespace Antigravity.Network
                 return;
             }
 
-            GameObject go = Instantiate(remotePlayerPrefab, new Vector3(remotePlayers.Count * 3f, 0, 0), Quaternion.identity);
+            // [FIX] PROXIMIDAD FORZADA: Teletransportar cerca del local para asegurar visibilidad
+            PlayerMovement local = Object.FindAnyObjectByType<PlayerMovement>();
+            if (local != null && local.GetComponent<NetworkPlayer>() == null) {
+                go.transform.position = local.transform.position + new Vector3(remotePlayers.Count + 1f, 0, 0);
+            } else {
+                go.transform.position = new Vector3(remotePlayers.Count * 3f, 0, 0);
+            }
+
             go.name = "REMOTE_" + username + "_" + userId;
-            
+
             NetworkPlayer np = go.AddComponent<NetworkPlayer>();
             np.userId = userId;
             np.username = username;
 
-            // EMERGENCY DIAGNOSTIC: Paint remote players RED
-            var renderer = go.GetComponentInChildren<SpriteRenderer>();
-            if (renderer != null) {
-                renderer.color = Color.red; // BRIGHT RED for easy identification
-                renderer.sortingOrder = 10; // Ensure it's on top
+            // EMERGENCY DIAGNOSTIC: Paint ALL SpriteRenderers RED
+            var renderers = go.GetComponentsInChildren<SpriteRenderer>();
+            foreach(var r in renderers) {
+                r.color = Color.red; 
+                r.sortingOrder = 100; // SUPER TOP
             }
 
             // ISOLATION: Destroy scripts instead of just disabling them to be 100% sure
