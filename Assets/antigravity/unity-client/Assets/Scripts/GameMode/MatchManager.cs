@@ -73,8 +73,10 @@ namespace Antigravity.GameMode
 
                 // HANDSHAKE: Tell the server we are ready to receive other players
                 if (Antigravity.Shooting.NetworkManager.Instance != null) {
-                    Debug.Log("[MatchManager] Sending 'player_ready' to server...");
-                    Antigravity.Shooting.NetworkManager.Instance.SendMessage("{\"tipo\":\"player_ready\"}");
+                    string username = Antigravity.Auth.GameSession.Username ?? "Jugador";
+                    string playerReadyMsg = $"{{\"tipo\":\"player_ready\",\"username\":\"{username}\"}}";
+                    Debug.Log("[MatchManager] Sending 'player_ready' to server: " + playerReadyMsg);
+                    Antigravity.Shooting.NetworkManager.Instance.SendMessage(playerReadyMsg);
                 }
                 
                 // Keep players disabled while waiting for connection

@@ -17,11 +17,11 @@ class GameService {
   }
 
   async getAvailableGames() {
-    return await GameRepository.findAvailableGames();
+    return await GameRepository.findAll();
   }
 
   async joinGame(gameId, userId, providedPassword = null) {
-    const game = await GameRepository.findGameById(gameId);
+    const game = await GameRepository.findById(gameId);
     if (!game) {
       throw new Error('Game not found');
     }
@@ -39,17 +39,17 @@ class GameService {
       throw new Error('Game is full');
     }
 
-    // Check if player is already in the game
-    const isPlayerInGame = game.players.some(p => p._id.toString() === userId.toString());
+    // Check if player is already in the game (works for both populated objects and raw ObjectIds)
+    const isPlayerInGame = game.players.some(p => (p._id || p).toString() === userId.toString());
     if (isPlayerInGame) {
       return game;
     }
 
-    return await GameRepository.addPlayerToGame(gameId, userId);
+    return await GameRepository.joinGame(gameId, userId);
   }
 
   async joinGameByCode(code, userId) {
-    const game = await GameRepository.findGameByCode(code.toUpperCase());
+    const game = await GameRepository.findPrivateByCode(code.toUpperCase());
     if (!game) {
       throw new Error('Sala no encontrada o ya ha comenzado');
     }
@@ -58,34 +58,31 @@ class GameService {
       throw new Error('Game is full');
     }
 
-    // Check if player is already in the game
-    const isPlayerInGame = game.players.some(p => p._id.toString() === userId.toString());
+    // Check if player is already in the game (works for both populated objects and raw ObjectIds)
+    const isPlayerInGame = game.players.some(p => (p._id || p).toString() === userId.toString());
     if (isPlayerInGame) {
       return game;
     }
 
-    return await GameRepository.addPlayerToGame(game._id, userId);
+    return await GameRepository.joinGame(game._id, userId);
   }
 
   async startGame(gameId, userId) {
-    const game = await GameRepository.findGameById(gameId);
+    const game = await GameRepository.findById(gameId);
     if (!game) {
       throw new Error('Game not found');
     }
 
-    // Optional: Check if userId is the owner (the first player in the array)
-    // For now, any player can start it or we can just let it be open
-    
     if (game.status !== 'WAITING') {
       throw new Error('Game is not in WAITING status');
     }
 
-    return await GameRepository.updateGameStatus(gameId, 'PLAYING');
+    return await GameRepository.updateStatus(gameId, 'PLAYING');
   }
 
   async finishGame(gameId) {
     console.log(`[GameService] Marcando partida ${gameId} como FINALIZADA.`);
-    return await GameRepository.updateGameStatus(gameId, 'FINISHED');
+    return await GameRepository.updateStatus(gameId, 'FINISHED');
   }
 }
 

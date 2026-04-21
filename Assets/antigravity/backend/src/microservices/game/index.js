@@ -68,6 +68,8 @@ wss.on('connection', async (ws, req) => {
             const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_super_secret_key_change_in_production');
             userId = decoded.userId;
             ws.userId = userId;
+            // Assign username from JWT if present
+            if (decoded.username) ws.username = decoded.username;
         } catch (err) {}
     }
 
@@ -79,13 +81,9 @@ wss.on('connection', async (ws, req) => {
                 if (!game) { ws.close(4004, "Game not found"); return; }
                 const isRegistered = game.players.some(p => p.toString() === userId?.toString());
                 if (!isRegistered) { ws.close(4003, "Not registered"); return; }
-
-                // Check if lobby full
-                let connectedCount = 0;
-                wss.clients.forEach(c => { if (c.gameId === gameId) connectedCount++; });
-                if (connectedCount >= game.maxPlayers) {
-                    wss.clients.forEach(c => { if (c.gameId === gameId) c.send(JSON.stringify({ tipo: 'start_countdown' })); });
-                }
+                // NOTE: start_countdown is now sent in player_ready handler to avoid
+                // race condition where client hasn't registered listeners yet.
+                console.log(`[WS] Player connected to game ${gameId}. userId: ${userId}`);
             } catch (err) { console.error(err); }
         }
     }
@@ -95,6 +93,8 @@ wss.on('connection', async (ws, req) => {
             const data = JSON.parse(message);
             if (data.tipo === 'player_ready') {
                 ws.isReady = true;
+                // Assign username from payload as fallback if JWT didn't provide it
+                if (!ws.username && data.username) ws.username = data.username;
                 const existingPlayers = [];
                 wss.clients.forEach(c => {
                     if (c !== ws && c.gameId === ws.gameId && c.isReady) {
@@ -105,6 +105,23 @@ wss.on('connection', async (ws, req) => {
                 wss.clients.forEach(c => {
                     if (c !== ws && c.gameId === ws.gameId) c.send(JSON.stringify({ tipo: 'nuevo_jugador', userId: ws.userId, username: ws.username || "Aliado" }));
                 });
+                console.log(`[WS] player_ready: ${ws.username || 'unknown'} (${ws.userId}) in game ${ws.gameId}`);
+
+                // Check if all registered players are ready -> send start_countdown
+                if (ws.gameId && ws.gameId !== 'singleplayer') {
+                    try {
+                        const game = await Game.findById(ws.gameId);
+                        if (game) {
+                            let readyCount = 0;
+                            wss.clients.forEach(c => { if (c.gameId === ws.gameId && c.isReady) readyCount++; });
+                            console.log(`[WS] Ready players: ${readyCount}/${game.maxPlayers}`);
+                            if (readyCount >= game.maxPlayers) {
+                                console.log(`[WS] All players ready in game ${ws.gameId}. Sending start_countdown.`);
+                                wss.clients.forEach(c => { if (c.gameId === ws.gameId) c.send(JSON.stringify({ tipo: 'start_countdown' })); });
+                            }
+                        }
+                    } catch (e) { console.error('[WS] Error checking ready state:', e.message); }
+                }
             } else if (data.tipo === 'disparo') handleShoot(ws, data, wss);
             else if (data.tipo === 'impacto_proyectil') handleImpact(ws, data, wss);
             else if (data.tipo === 'movimiento') {
