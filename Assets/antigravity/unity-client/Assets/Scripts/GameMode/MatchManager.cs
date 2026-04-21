@@ -28,11 +28,23 @@ namespace Antigravity.GameMode
                     if (m.enabled && m.GetComponent<Antigravity.Network.NetworkPlayer>() == null) activeLocalCount++;
                 }
 
-                var remotePlayers = FindObjectsByType<Antigravity.Network.NetworkPlayer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-                
+                string remotePositions = "";
+                foreach (var rp in remotePlayers) {
+                    remotePositions += $"\n  - {rp.username} ({rp.userId}): {rp.transform.position}";
+                }
+
+                PlayerMovement localPlayerObj = null;
+                foreach(var m in allMovements) {
+                    if (m.enabled && m.GetComponent<Antigravity.Network.NetworkPlayer>() == null) {
+                        localPlayerObj = m;
+                        break;
+                    }
+                }
+                string localPosStr = localPlayerObj != null ? localPlayerObj.transform.position.ToString() : "N/A";
+
                 string debugInfo = $"[ARENA BOTS MULTI-DEBUG]\n" +
-                                   $"Local Players: {activeLocalCount}\n" +
-                                   $"Remote Players: {remotePlayers.Length}\n" +
+                                   $"Local Players: {activeLocalCount} ({localPosStr})\n" +
+                                   $"Remote Players: {remotePlayers.Length}{remotePositions}\n" +
                                    $"User ID: {Antigravity.Auth.GameSession.UserId}\n" +
                                    $"Errors: {string.Join(" | ", errorHistory)}";
 
