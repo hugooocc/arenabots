@@ -27,7 +27,6 @@ namespace Antigravity.Network
             Rigidbody2D rb = GetComponent<Rigidbody2D>();
             if (rb != null) {
                 rb.bodyType = RigidbodyType2D.Kinematic;
-                rb.fullKinematicContacts = false;
                 rb.simulated = true; // Stay simulated but kinematic to allow manual movement
             }
         }

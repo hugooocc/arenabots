@@ -122,7 +122,7 @@ namespace Antigravity.GameMode
                 }
                 
                 // Keep players disabled while waiting for connection
-                PlayerMovement[] players = FindObjectsOfType<PlayerMovement>();
+                Antigravity.Player.PlayerMovement[] players = FindObjectsByType<Antigravity.Player.PlayerMovement>(FindObjectsSortMode.None);
                 foreach(var p in players) p.canMove = false;
             }
         }
@@ -164,7 +164,7 @@ namespace Antigravity.GameMode
         IEnumerator StartMatchCountdown()
         {
             // Find all players and disable their movement initially
-            PlayerMovement[] players = FindObjectsOfType<PlayerMovement>();
+            Antigravity.Player.PlayerMovement[] players = FindObjectsByType<Antigravity.Player.PlayerMovement>(FindObjectsSortMode.None);
             foreach(var p in players) p.canMove = false;
 
             // Show container
