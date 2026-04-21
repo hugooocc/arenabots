@@ -36,10 +36,22 @@ namespace Antigravity.Network
             transform.localScale = new Vector3(1f, 1f, 1f);
             gameObject.layer = 0; // Default layer
 
+            // [BRUTE FORCE] Create a procedural white square so something is ALWAYS visible
+            if (GetComponent<SpriteRenderer>() == null || GetComponent<SpriteRenderer>().sprite == null) {
+                var sr = gameObject.AddComponent<SpriteRenderer>();
+                Texture2D tex = new Texture2D(64, 64);
+                for(int x=0; x<64; x++) for(int y=0; y<64; y++) tex.SetPixel(x,y, Color.white);
+                tex.Apply();
+                sr.sprite = Sprite.Create(tex, new Rect(0,0,64,64), new Vector2(0.5f, 0.5f));
+                sr.color = Color.red;
+                sr.sortingOrder = 1001;
+                Debug.Log("[VisibilityPointer] Creado sprite procedural rojo para " + gameObject.name);
+            }
+
             var renderers = GetComponentsInChildren<SpriteRenderer>();
             foreach(var r in renderers) {
                 r.enabled = true;
-                r.color = Color.red;
+                if (r.sprite != null) r.color = Color.red;
                 r.sortingOrder = 1000;
             }
 
