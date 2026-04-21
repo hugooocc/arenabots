@@ -28,6 +28,7 @@ namespace Antigravity.GameMode
                     if (m.enabled && m.GetComponent<Antigravity.Network.NetworkPlayer>() == null) activeLocalCount++;
                 }
 
+                var remotePlayers = FindObjectsByType<Antigravity.Network.NetworkPlayer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
                 string remotePositions = "";
                 foreach (var rp in remotePlayers) {
                     remotePositions += $"\n  - {rp.username} ({rp.userId}): {rp.transform.position}";
