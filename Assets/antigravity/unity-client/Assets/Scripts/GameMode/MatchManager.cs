@@ -16,29 +16,32 @@ namespace Antigravity.GameMode
         // Stored so we can unsubscribe it later
         private System.Action onNetworkConnectedHandler;
 
-        private void Update()
+        private void OnGUI()
         {
-            // Real-time diagnostic on screen
-            if (countdownLabel != null && Antigravity.Auth.GameSession.CurrentGameId != "singleplayer")
+            // Persistent debug overlay using legacy GUI for guaranteed visibility
+            if (Antigravity.Auth.GameSession.CurrentGameId != "singleplayer")
             {
                 var localPlayers = FindObjectsByType<Antigravity.Player.PlayerMovement>(FindObjectsSortMode.None);
                 var remotePlayers = FindObjectsByType<Antigravity.Network.NetworkPlayer>(FindObjectsSortMode.None);
                 
-                string debugInfo = $"PROBANDO MULTIJUGADOR\n" +
-                                   $"Local: {localPlayers.Length} | Remotos: {remotePlayers.Length}\n" +
-                                   $"Tu ID: {Antigravity.Auth.GameSession.UserId}\n" +
-                                   $"ERRS: {string.Join(" | ", errorHistory)}";
-                
-                // Only show this if match hasn't started or for debugging
-                if (countdownLabel.text.Contains("ESPERANDO") || countdownLabel.text.Contains("PROBANDO") || countdownLabel.text.Contains("ERRS")) {
-                    countdownLabel.text = debugInfo;
-                    countdownLabel.style.fontSize = 40; // Smaller to fit info
-                } 
-                
-                // Perform a periodic check to log state
-                if (Time.frameCount % 300 == 0) {
-                    Debug.Log($"[DIAGNOSTIC] Clients in Scene: Local={localPlayers.Length}, Remote={remotePlayers.Length}");
-                }
+                string debugInfo = $"[ARENA BOTS MULTI-DEBUG]\n" +
+                                   $"Local Players: {localPlayers.Length}\n" +
+                                   $"Remote Players: {remotePlayers.Length}\n" +
+                                   $"User ID: {Antigravity.Auth.GameSession.UserId}\n" +
+                                   $"Errors: {string.Join(" | ", errorHistory)}";
+
+                GUI.color = Color.yellow;
+                GUI.Label(new Rect(10, 10, 600, 100), debugInfo);
+            }
+        }
+
+        private void Update()
+        {
+            // Periodic check to log state to console
+            if (Time.frameCount % 300 == 0 && Antigravity.Auth.GameSession.CurrentGameId != "singleplayer") {
+                var localPlayers = FindObjectsByType<Antigravity.Player.PlayerMovement>(FindObjectsSortMode.None);
+                var remotePlayers = FindObjectsByType<Antigravity.Network.NetworkPlayer>(FindObjectsSortMode.None);
+                Debug.Log($"[DIAGNOSTIC] Clients in Scene: Local={localPlayers.Length}, Remote={remotePlayers.Length}");
             }
         }
 
