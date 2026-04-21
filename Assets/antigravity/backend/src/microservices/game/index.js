@@ -106,47 +106,62 @@ wss.on('connection', async (ws, req) => {
         }
     }
 
-    ws.on('message', async (message) => {
+    ws.on('message', async (rawMessage) => {
         try {
+            // Convert Buffer to string safely
+            const message = rawMessage.toString();
             const data = JSON.parse(message);
+            
+            console.log(`[WS] Message from ${ws.username || 'unknown'}:`, data.tipo);
+
             if (data.tipo === 'player_ready') {
                 ws.isReady = true;
-                // Assign username from payload as fallback if JWT didn't provide it
                 if (!ws.username && data.username) ws.username = data.username;
+                
+                console.log(`[WS] ${ws.username} is READY in game ${ws.gameId}`);
+
+                // Send lists to keep players synced
                 const existingPlayers = [];
                 wss.clients.forEach(c => {
-                    if (c !== ws && c.gameId === ws.gameId && c.isReady) {
+                    if (c !== ws && String(c.gameId) === String(ws.gameId) && c.isReady) {
                         existingPlayers.push({ userId: c.userId, username: c.username || "Aliado" });
                     }
                 });
                 if (existingPlayers.length > 0) ws.send(JSON.stringify({ tipo: 'lista_jugadores', jugadores: existingPlayers }));
+                
                 wss.clients.forEach(c => {
-                    if (c !== ws && c.gameId === ws.gameId) c.send(JSON.stringify({ tipo: 'nuevo_jugador', userId: ws.userId, username: ws.username || "Aliado" }));
+                    if (c !== ws && String(c.gameId) === String(ws.gameId)) {
+                        c.send(JSON.stringify({ tipo: 'nuevo_jugador', userId: ws.userId, username: ws.username || "Aliado" }));
+                    }
                 });
-                console.log(`[WS] player_ready: ${ws.username || 'unknown'} (${ws.userId}) in game ${ws.gameId}`);
 
-                // Check if all joined players are ready -> send start_countdown
+                // Trigger countdown logic
                 if (ws.gameId && ws.gameId !== 'singleplayer') {
-                    try {
-                        const game = await Game.findById(ws.gameId);
-                        if (game) {
-                            let readyCount = 0;
-                            wss.clients.forEach(c => { 
-                                if (c.gameId === ws.gameId && c.isReady) readyCount++; 
-                            });
-                            
-                            const joinedCount = game.players.length;
-                            console.log(`[WS] Status for game ${ws.gameId}: ${readyCount} players ready out of ${joinedCount} joined (Max: ${game.maxPlayers})`);
-                            
-                            // Check against joined players. Minimum 2 players to start multiplayer.
-                            if (readyCount >= joinedCount && joinedCount >= 2) {
-                                console.log(`[WS] All joined players are ready in game ${ws.gameId} (Count: ${joinedCount}). Sending start_countdown.`);
-                                wss.clients.forEach(c => { 
-                                    if (c.gameId === ws.gameId) c.send(JSON.stringify({ tipo: 'start_countdown' })); 
-                                });
+                    const game = await Game.findById(ws.gameId);
+                    if (game) {
+                        let readyCount = 0;
+                        const connectedClients = [];
+                        wss.clients.forEach(c => { 
+                            if (String(c.gameId) === String(ws.gameId)) {
+                                connectedClients.push({ user: c.username, ready: !!c.isReady });
+                                if (c.isReady) readyCount++; 
                             }
+                        });
+                        
+                        const joinedCount = game.players.length;
+                        console.log(`[WS STATUS] Game: ${ws.gameId} | Ready: ${readyCount} | Joined: ${joinedCount} | Clients:`, connectedClients);
+                        
+                        if (readyCount >= joinedCount && joinedCount >= 2) {
+                            console.log(`[WS START] Triggering countdown for game ${ws.gameId}`);
+                            wss.clients.forEach(c => { 
+                                if (String(c.gameId) === String(ws.gameId)) c.send(JSON.stringify({ tipo: 'start_countdown' })); 
+                            });
+                        } else {
+                            console.log(`[WS WAIT] Still waiting. Need ${joinedCount} ready, have ${readyCount}.`);
                         }
-                    } catch (e) { console.error('[WS] Error checking ready state:', e.message); }
+                    } else {
+                        console.error(`[WS ERROR] Game ${ws.gameId} not found in DB during ready check`);
+                    }
                 }
             } else if (data.tipo === 'disparo') handleShoot(ws, data, wss);
             else if (data.tipo === 'impacto_proyectil') handleImpact(ws, data, wss);
