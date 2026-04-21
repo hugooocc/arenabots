@@ -259,7 +259,10 @@ namespace Antigravity.UI
         private void ShowEndGameScreen()
         {
             isGameActive = false;
+            if (hudInstance != null) hudInstance.style.display = DisplayStyle.None;
             if (gameHudLayer != null) gameHudLayer.style.display = DisplayStyle.None;
+            
+            if (endGameInstance != null) endGameInstance.style.display = DisplayStyle.Flex;
             if (endGameLayer != null)
             {
                 endGameLayer.style.display = DisplayStyle.Flex;
@@ -299,6 +302,7 @@ namespace Antigravity.UI
                 www.downloadHandler = new DownloadHandlerBuffer();
                 www.SetRequestHeader("Content-Type", "application/json");
                 www.SetRequestHeader("Authorization", "Bearer " + GameSession.Token);
+                www.timeout = 10;
 
                 yield return www.SendWebRequest();
 
