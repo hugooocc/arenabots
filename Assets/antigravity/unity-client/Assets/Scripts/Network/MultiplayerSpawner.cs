@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using Antigravity.Shooting;
+using Antigravity.Player;
 
 namespace Antigravity.Network
 {
