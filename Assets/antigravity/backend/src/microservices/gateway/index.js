@@ -14,14 +14,17 @@ const STATS_URL = 'http://stats:3003';
 
 // Route API requests
 app.use('/api/auth', (req, res) => {
+    req.url = req.originalUrl;
     proxy.web(req, res, { target: AUTH_URL });
 });
 
 app.use('/api/users', (req, res) => {
+    req.url = req.originalUrl;
     proxy.web(req, res, { target: STATS_URL });
 });
 
 app.use('/api/games', (req, res) => {
+    req.url = req.originalUrl;
     proxy.web(req, res, { target: GAME_URL });
 });
 
