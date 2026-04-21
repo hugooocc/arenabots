@@ -26,15 +26,14 @@ namespace Antigravity.GameMode
                 
                 string debugInfo = $"PROBANDO MULTIJUGADOR\n" +
                                    $"Local: {localPlayers.Length} | Remotos: {remotePlayers.Length}\n" +
-                                   $"Tu ID: {Antigravity.Auth.GameSession.UserId}";
+                                   $"Tu ID: {Antigravity.Auth.GameSession.UserId}\n" +
+                                   $"ERRS: {string.Join(" | ", errorHistory)}";
                 
                 // Only show this if match hasn't started or for debugging
-                if (countdownLabel.text.Contains("ESPERANDO") || countdownLabel.text.Contains("CONTADOR")) {
-                    // Stay as is
-                } else {
-                    // Update small debug text elsewhere? Let's just use the label for now as a big overlay
-                    // countdownLabel.text = debugInfo; 
-                }
+                if (countdownLabel.text.Contains("ESPERANDO") || countdownLabel.text.Contains("PROBANDO") || countdownLabel.text.Contains("ERRS")) {
+                    countdownLabel.text = debugInfo;
+                    countdownLabel.style.fontSize = 40; // Smaller to fit info
+                } 
                 
                 // Perform a periodic check to log state
                 if (Time.frameCount % 300 == 0) {
@@ -43,8 +42,17 @@ namespace Antigravity.GameMode
             }
         }
 
+        private System.Collections.Generic.List<string> errorHistory = new System.Collections.Generic.List<string>();
+
         private void Start()
         {
+            // CAPTURE ERRORS FOR DIAGNOSIS
+            Application.logMessageReceived += (condition, stackTrace, type) => {
+                if (type == LogType.Error || type == LogType.Exception) {
+                    if (errorHistory.Count < 5) errorHistory.Add(condition);
+                }
+            };
+
             // ¡Detectamos los componentes automáticamente para que no tengas que arrastrar nada!
             countdownUIDocument = GetComponent<UIDocument>();
             singlePlayerManager = UnityEngine.Object.FindAnyObjectByType<SinglePlayerManager>();
