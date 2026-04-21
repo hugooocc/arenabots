@@ -37,6 +37,15 @@ namespace Antigravity.GameMode
             {
                 StartCoroutine(StartMatchCountdown());
             }
+            else
+            {
+                if (countdownLabel != null) 
+                {
+                    countdownLabel.style.fontSize = 60; // Texto más pequeño para el mensaje de espera
+                    countdownLabel.text = "ESPERANDO JUGADORES...";
+                    if (countdownContainer != null) countdownContainer.style.display = DisplayStyle.Flex;
+                }
+
                 // 1. MULTIPLAYER INITIALIZATION (MUST BE FIRST)
                 Debug.Log("[MatchManager] Initializing Multiplayer Spawner...");
                 GameObject spawnerGo = new GameObject("MultiplayerSpawner");
