@@ -138,9 +138,9 @@ wss.on('connection', async (ws, req) => {
                             const joinedCount = game.players.length;
                             console.log(`[WS] Status for game ${ws.gameId}: ${readyCount} players ready out of ${joinedCount} joined (Max: ${game.maxPlayers})`);
                             
-                            // Check against joined players, not max players
-                            if (readyCount >= joinedCount && joinedCount >= 1) {
-                                console.log(`[WS] All joined players are ready in game ${ws.gameId}. Sending start_countdown.`);
+                            // Check against joined players. Minimum 2 players to start multiplayer.
+                            if (readyCount >= joinedCount && joinedCount >= 2) {
+                                console.log(`[WS] All joined players are ready in game ${ws.gameId} (Count: ${joinedCount}). Sending start_countdown.`);
                                 wss.clients.forEach(c => { 
                                     if (c.gameId === ws.gameId) c.send(JSON.stringify({ tipo: 'start_countdown' })); 
                                 });
