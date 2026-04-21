@@ -86,21 +86,25 @@ namespace Antigravity.Network
                 return;
             }
 
-            // [FIX] PROXIMIDAD FORZADA: Teletransportar cerca del local para asegurar visibilidad
             GameObject go = Instantiate(remotePlayerPrefab);
-            PlayerMovement local = Object.FindAnyObjectByType<PlayerMovement>();
-            if (local != null && local.GetComponent<NetworkPlayer>() == null) {
-                go.transform.position = local.transform.position + new Vector3(remotePlayers.Count + 1f, 0, 0);
-            } else {
-                go.transform.position = new Vector3(remotePlayers.Count * 3f, 0, 0);
-            }
-
             go.name = "REMOTE_" + username + "_" + userId;
 
             NetworkPlayer np = go.AddComponent<NetworkPlayer>();
             go.AddComponent<VisibilityPointer>();
             np.userId = userId;
             np.username = username;
+
+            // [FIX] PROXIMIDAD FORZADA: Ahora lo hacemos DESPUÉS de añadir NetworkPlayer
+            // para que FindAnyObjectByType no se confunda consigo mismo si busca por PlayerMovement
+            PlayerMovement[] allMovements = Object.FindObjectsByType<PlayerMovement>(FindObjectsSortMode.None);
+            foreach(var pm in allMovements) {
+                if (pm.gameObject != go && pm.GetComponent<NetworkPlayer>() == null) {
+                    // Este es el local. Nos teletransportamos a su lado.
+                    go.transform.position = pm.transform.position + new Vector3(2f, 2f, 0);
+                    Debug.Log($"[MultiplayerSpawner] Teletransportando remoto {username} al lado del local {pm.gameObject.name} en {go.transform.position}");
+                    break;
+                }
+            }
 
             // EMERGENCY DIAGNOSTIC: Paint ALL SpriteRenderers RED
             var renderers = go.GetComponentsInChildren<SpriteRenderer>();

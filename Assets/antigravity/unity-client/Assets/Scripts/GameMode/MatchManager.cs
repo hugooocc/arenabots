@@ -51,6 +51,24 @@ namespace Antigravity.GameMode
 
                 GUI.color = Color.yellow;
                 GUI.Label(new Rect(10, 10, 600, 100), debugInfo);
+
+                // --- RADAR DE PROXIMIDAD (Garantizado OnGUI) ---
+                if (localPlayerObj != null && remotePlayers.Length > 0) {
+                    foreach(var rp in remotePlayers) {
+                        Vector3 dir = (rp.transform.position - localPlayerObj.transform.position).normalized;
+                        float dist = Vector3.Distance(localPlayerObj.transform.position, rp.transform.position);
+                        
+                        // Dibujar una flecha en el centro de la pantalla si está lejos
+                        string arrow = "";
+                        if (dir.x > 0.5f) arrow = "DERECHA --->";
+                        else if (dir.x < -0.5f) arrow = "<--- IZQUIERDA";
+                        if (dir.y > 0.5f) arrow += " ARRIBA ^";
+                        else if (dir.y < -0.5f) arrow += " ABAJO v";
+
+                        GUI.color = Color.red;
+                        GUI.Box(new Rect(Screen.width/2 - 100, 50, 200, 50), $"REMOTOS CERCA\nDistancia: {dist:F1}m\nDir: {arrow}");
+                    }
+                }
             }
         }
 
