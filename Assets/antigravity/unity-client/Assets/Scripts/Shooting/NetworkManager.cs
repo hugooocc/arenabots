@@ -60,7 +60,12 @@ namespace Antigravity.Shooting
                 if (!string.IsNullOrEmpty(Antigravity.Auth.GameSession.CurrentGameId) && 
                     !string.IsNullOrEmpty(Antigravity.Auth.GameSession.Token))
                 {
-                    ConnectToGame(Antigravity.Auth.GameSession.CurrentGameId, Antigravity.Auth.GameSession.Token);
+                    // FIX: Don't reconnect if already connected to a game!
+                    if (websocket == null || websocket.State != WebSocketState.Open) {
+                        ConnectToGame(Antigravity.Auth.GameSession.CurrentGameId, Antigravity.Auth.GameSession.Token);
+                    } else {
+                        Debug.Log("[NetworkManager] Already connected. Maintaining session for Arena.");
+                    }
                 }
                 else 
                 {
