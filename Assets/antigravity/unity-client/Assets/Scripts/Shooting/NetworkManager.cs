@@ -19,7 +19,9 @@ namespace Antigravity.Shooting
     {
         public static NetworkManager Instance { get; private set; }
 
-        public string serverUrl = "ws://localhost:3000";
+        public string serverUrl => Antigravity.Config.AntigravityConfig.Instance != null 
+            ? Antigravity.Config.AntigravityConfig.Instance.WsBaseUrl 
+            : "ws://localhost:3000";
         private WebSocket websocket;
 
         public event Action OnConnected;

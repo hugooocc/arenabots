@@ -32,7 +32,9 @@ namespace Antigravity.Auth
     {
         public static AuthManager Instance { get; private set; }
 
-        private string baseUrl = "http://localhost:3000/api/auth";
+        private string baseUrl => Antigravity.Config.AntigravityConfig.Instance != null 
+            ? Antigravity.Config.AntigravityConfig.Instance.AuthBaseUrl 
+            : "http://localhost:3000/api/auth";
 
         private void Awake()
         {
@@ -68,6 +70,7 @@ namespace Antigravity.Auth
                 www.uploadHandler = new UploadHandlerRaw(bodyRaw);
                 www.downloadHandler = new DownloadHandlerBuffer();
                 www.SetRequestHeader("Content-Type", "application/json");
+                www.timeout = 10; // 10 seconds timeout
 
                 yield return www.SendWebRequest();
 

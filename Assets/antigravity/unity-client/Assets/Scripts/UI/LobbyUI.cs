@@ -12,7 +12,9 @@ public class LobbyUI : MonoBehaviour
     public Button startButton;
     public Text gameNameText;
 
-    private string baseUrl = "http://localhost:3000/api";
+    private string baseUrl => Antigravity.Config.AntigravityConfig.Instance != null 
+        ? Antigravity.Config.AntigravityConfig.Instance.HttpBaseUrl 
+        : "http://localhost:3000/api";
     private string currentGameId;
     private string userToken = "test-user-id";
 

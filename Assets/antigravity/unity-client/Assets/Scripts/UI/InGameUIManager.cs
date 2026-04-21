@@ -284,7 +284,9 @@ namespace Antigravity.UI
             if (string.IsNullOrEmpty(GameSession.Token))
                 yield break; // Skip if no token is present
 
-            string baseUrl = "http://localhost:3000/api";
+            string baseUrl = Antigravity.Config.AntigravityConfig.Instance != null 
+                ? Antigravity.Config.AntigravityConfig.Instance.HttpBaseUrl 
+                : "http://localhost:3000/api";
             string json = JsonUtility.ToJson(new UpdateStatsRequest { 
                 mobsKilled = mobsKilled, 
                 timeSurvived = Mathf.FloorToInt(timePlayed) 

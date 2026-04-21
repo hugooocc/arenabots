@@ -21,7 +21,9 @@ public class GameData
 [RequireComponent(typeof(UIDocument))]
 public class MainMenuUI : MonoBehaviour
 {
-    private string baseUrl = "http://localhost:3000/api";
+    private string baseUrl => Antigravity.Config.AntigravityConfig.Instance != null 
+        ? Antigravity.Config.AntigravityConfig.Instance.HttpBaseUrl 
+        : "http://localhost:3000/api";
     private string GetUserToken() { return GameSession.Token ?? "test-user-id"; }
 
     private TextField gameNameInput;
