@@ -24,6 +24,8 @@ namespace Antigravity.Shooting
             : "ws://localhost:3000";
         private WebSocket websocket;
 
+        public bool IsConnected => websocket != null && websocket.State == WebSocketState.Open;
+
         public event Action OnConnected;
         public event Action OnDisconnected;
         public event Action<string> OnMessageReceived;

@@ -13,6 +13,9 @@ namespace Antigravity.GameMode
         private Label countdownLabel;
         private VisualElement countdownContainer;
 
+        // Stored so we can unsubscribe it later
+        private System.Action onNetworkConnectedHandler;
+
         private void Start()
         {
             // ¡Detectamos los componentes automáticamente para que no tengas que arrastrar nada!
@@ -71,12 +74,26 @@ namespace Antigravity.GameMode
                     Debug.LogWarning("[MatchManager] Local PlayerMovement NOT FOUND in scene!");
                 }
 
-                // HANDSHAKE: Tell the server we are ready to receive other players
-                if (Antigravity.Shooting.NetworkManager.Instance != null) {
-                    string username = Antigravity.Auth.GameSession.Username ?? "Jugador";
-                    string playerReadyMsg = $"{{\"tipo\":\"player_ready\",\"username\":\"{username}\"}}";
-                    Debug.Log("[MatchManager] Sending 'player_ready' to server: " + playerReadyMsg);
-                    Antigravity.Shooting.NetworkManager.Instance.SendMessage(playerReadyMsg);
+                // HANDSHAKE: tell the server we are in the Arena.
+                // IMPORTANT: we MUST wait for the WebSocket to be open before sending.
+                // ConnectToGame() is async, so the socket may not be ready yet when Start() runs.
+                var nm = Antigravity.Shooting.NetworkManager.Instance;
+                if (nm != null)
+                {
+                    if (nm.IsConnected)
+                    {
+                        // Already connected — fire immediately
+                        SendPlayerReady();
+                    }
+                    else
+                    {
+                        // Wait for connection to open, then send
+                        onNetworkConnectedHandler = () => {
+                            SendPlayerReady();
+                            nm.OnConnected -= onNetworkConnectedHandler;
+                        };
+                        nm.OnConnected += onNetworkConnectedHandler;
+                    }
                 }
                 
                 // Keep players disabled while waiting for connection
@@ -87,10 +104,23 @@ namespace Antigravity.GameMode
 
         private void OnDestroy()
         {
-            if (Antigravity.Shooting.NetworkManager.Instance != null)
+            var nm = Antigravity.Shooting.NetworkManager.Instance;
+            if (nm != null)
             {
-                Antigravity.Shooting.NetworkManager.Instance.OnMessageReceived -= HandleNetworkMessage;
+                nm.OnMessageReceived -= HandleNetworkMessage;
+                if (onNetworkConnectedHandler != null)
+                    nm.OnConnected -= onNetworkConnectedHandler;
             }
+        }
+
+        private void SendPlayerReady()
+        {
+            var nm = Antigravity.Shooting.NetworkManager.Instance;
+            if (nm == null) return;
+            string username = Antigravity.Auth.GameSession.Username ?? "Jugador";
+            string msg = $"{{\"tipo\":\"player_ready\",\"username\":\"{username}\"}}";
+            Debug.Log("[MatchManager] Sending player_ready: " + msg);
+            nm.SendMessage(msg);
         }
 
         private void HandleNetworkMessage(string rawMessage)
