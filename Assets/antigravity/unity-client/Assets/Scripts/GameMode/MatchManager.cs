@@ -37,21 +37,7 @@ namespace Antigravity.GameMode
             {
                 StartCoroutine(StartMatchCountdown());
             }
-            else
-            {
-                if (countdownLabel != null) 
-                {
-                    countdownLabel.style.fontSize = 60; // Texto más pequeño para el mensaje de espera
-                    countdownLabel.text = "ESPERANDO JUGADORES...";
-                    if (countdownContainer != null) countdownContainer.style.display = DisplayStyle.Flex;
-                }
-
-                if (Antigravity.Shooting.NetworkManager.Instance != null)
-                {
-                    Antigravity.Shooting.NetworkManager.Instance.OnMessageReceived += HandleNetworkMessage;
-                }
-
-                // MULTIPLAYER INITIALIZATION
+                // 1. MULTIPLAYER INITIALIZATION (MUST BE FIRST)
                 Debug.Log("[MatchManager] Initializing Multiplayer Spawner...");
                 GameObject spawnerGo = new GameObject("MultiplayerSpawner");
                 var spawner = spawnerGo.AddComponent<Antigravity.Network.MultiplayerSpawner>();
@@ -63,7 +49,28 @@ namespace Antigravity.GameMode
                     Debug.Log("[MatchManager] RemotePlayer prefab loaded successfully.");
                 }
 
-                // Attach Sync to local player
+                // 2. HANDSHAKE: tell the server we are in the Arena.
+                // IMPORTANT: we MUST wait for the WebSocket to be open before sending.
+                var nm = Antigravity.Shooting.NetworkManager.Instance;
+                if (nm != null)
+                {
+                    nm.OnMessageReceived += HandleNetworkMessage;
+
+                    if (nm.IsConnected)
+                    {
+                        SendPlayerReady();
+                    }
+                    else
+                    {
+                        onNetworkConnectedHandler = () => {
+                            SendPlayerReady();
+                            nm.OnConnected -= onNetworkConnectedHandler;
+                        };
+                        nm.OnConnected += onNetworkConnectedHandler;
+                    }
+                }
+
+                // 3. Attach Sync to local player
                 PlayerMovement localPlayer = UnityEngine.Object.FindAnyObjectByType<PlayerMovement>();
                 if (localPlayer != null)
                 {
@@ -72,28 +79,6 @@ namespace Antigravity.GameMode
                 }
                 else {
                     Debug.LogWarning("[MatchManager] Local PlayerMovement NOT FOUND in scene!");
-                }
-
-                // HANDSHAKE: tell the server we are in the Arena.
-                // IMPORTANT: we MUST wait for the WebSocket to be open before sending.
-                // ConnectToGame() is async, so the socket may not be ready yet when Start() runs.
-                var nm = Antigravity.Shooting.NetworkManager.Instance;
-                if (nm != null)
-                {
-                    if (nm.IsConnected)
-                    {
-                        // Already connected — fire immediately
-                        SendPlayerReady();
-                    }
-                    else
-                    {
-                        // Wait for connection to open, then send
-                        onNetworkConnectedHandler = () => {
-                            SendPlayerReady();
-                            nm.OnConnected -= onNetworkConnectedHandler;
-                        };
-                        nm.OnConnected += onNetworkConnectedHandler;
-                    }
                 }
                 
                 // Keep players disabled while waiting for connection

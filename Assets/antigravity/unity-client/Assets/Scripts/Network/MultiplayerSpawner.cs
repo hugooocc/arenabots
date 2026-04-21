@@ -9,7 +9,7 @@ namespace Antigravity.Network
         public GameObject remotePlayerPrefab;
         private Dictionary<string, NetworkPlayer> remotePlayers = new Dictionary<string, NetworkPlayer>();
 
-        private void Start()
+        private void Awake()
         {
             if (NetworkManager.Instance != null)
             {
@@ -70,8 +70,11 @@ namespace Antigravity.Network
         {
             if (remotePlayers.ContainsKey(userId)) return;
 
-            // Don't spawn self
-            if (userId == Antigravity.Auth.GameSession.UserId) return;
+            // CRITICAL: If testing on the same account, they share the same ID.
+            if (userId == Antigravity.Auth.GameSession.UserId) {
+                Debug.LogWarning($"[MultiplayerSpawner] Refusing to spawn player with MY OWN UserId: {username} ({userId}). Are you testing with the same account in two clients?");
+                return;
+            }
 
             GameObject go = Instantiate(remotePlayerPrefab, Vector3.zero, Quaternion.identity);
             go.name = "RemotePlayer_" + username;
@@ -80,12 +83,31 @@ namespace Antigravity.Network
             np.userId = userId;
             np.username = username;
 
-            // Disable local components
+            // DISABLE ALL LOCAL CONTROL COMPONENTS
+            // 1. Movement logic
             var movement = go.GetComponent<Antigravity.Player.PlayerMovement>();
             if (movement != null) movement.enabled = false;
             
+            // 2. Shooting logic
             var shooting = go.GetComponent<Antigravity.Shooting.ShootController>();
             if (shooting != null) shooting.enabled = false;
+
+            // 3. Audio & Camera (If the prefab has them)
+            var cam = go.GetComponentInChildren<Camera>();
+            if (cam != null) cam.enabled = false;
+
+            var listener = go.GetComponentInChildren<AudioListener>();
+            if (listener != null) listener.enabled = false;
+
+            // 4. Input components (New Input System)
+            var playerInput = go.GetComponent<UnityEngine.InputSystem.PlayerInput>();
+            if (playerInput != null) playerInput.enabled = false;
+
+            // 5. Physics Simulation (Crucial: remote players shouldn't be affected by gravity or collisions during sync)
+            var rb = go.GetComponent<Rigidbody2D>();
+            if (rb != null) {
+                rb.simulated = false; // Prevents collision physics but allows transform-based movement
+            }
 
             remotePlayers.Add(userId, np);
             Debug.Log($"[MultiplayerSpawner] Spawned remote player: {username} ({userId})");
