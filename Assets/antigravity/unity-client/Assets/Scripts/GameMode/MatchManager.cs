@@ -79,15 +79,16 @@ namespace Antigravity.GameMode
                     }
                 }
 
-                // 3. Attach Sync to local player
+                // 3. IDENTIFY LOCAL PLAYER
                 PlayerMovement localPlayer = UnityEngine.Object.FindAnyObjectByType<PlayerMovement>();
                 if (localPlayer != null)
                 {
-                    // Move local player to a distinct spawn point
-                    localPlayer.transform.position = new Vector3(-2f, 0, 0);
+                    localPlayer.gameObject.name = "LOCAL_PLAYER_" + Antigravity.Auth.GameSession.Username;
+                    localPlayer.transform.position = new Vector3(-3f, 0, 0); // Start far left
                     
-                    localPlayer.gameObject.AddComponent<Antigravity.Network.PlayerNetworkSync>();
-                    Debug.Log("[MatchManager] Initialized multiplayer sync for LOCAL player.");
+                    // Add sync only to THIS local player
+                    var sync = localPlayer.gameObject.AddComponent<Antigravity.Network.PlayerNetworkSync>();
+                    Debug.Log($"[DIAGNOSTIC] Local player identified and synced: {localPlayer.gameObject.name}");
                 }
                 else {
                     Debug.LogWarning("[MatchManager] Local PlayerMovement NOT FOUND in scene!");

@@ -85,47 +85,39 @@ namespace Antigravity.Network
                 return;
             }
 
-            GameObject go = Instantiate(remotePlayerPrefab, new Vector3(remotePlayers.Count * 2f, 0, 0), Quaternion.identity);
-            go.name = isMe ? "RemoteClone_OF_SELF" : "RemotePlayer_" + username;
+            GameObject go = Instantiate(remotePlayerPrefab, new Vector3(remotePlayers.Count * 3f, 0, 0), Quaternion.identity);
+            go.name = "REMOTE_" + username + "_" + userId;
             
             NetworkPlayer np = go.AddComponent<NetworkPlayer>();
             np.userId = userId;
             np.username = username;
 
-            // VISUAL DIFFERENTIATION: Make remote players slightly different color
+            // EMERGENCY DIAGNOSTIC: Paint remote players RED
             var renderer = go.GetComponentInChildren<SpriteRenderer>();
             if (renderer != null) {
-                renderer.color = new Color(0.7f, 0.7f, 1f, 1f); // Bluish tint for remote players
+                renderer.color = Color.red; // BRIGHT RED for easy identification
+                renderer.sortingOrder = 10; // Ensure it's on top
             }
 
-            // NAME LABEL: Simple legacy TextMesh above head
-            GameObject nameLabelGo = new GameObject("NameLabel");
-            nameLabelGo.transform.SetParent(go.transform);
-            nameLabelGo.transform.localPosition = new Vector3(0, 1.2f, 0);
+            // ISOLATION: Destroy scripts instead of just disabling them to be 100% sure
+            var sync = go.GetComponent<Antigravity.Network.PlayerNetworkSync>();
+            if (sync != null) DestroyImmediate(sync);
             
-            var textMesh = nameLabelGo.AddComponent<TextMesh>();
-            textMesh.text = username;
-            textMesh.fontSize = 24;
-            textMesh.characterSize = 0.1f;
-            textMesh.anchor = TextAnchor.MiddleCenter;
-            textMesh.alignment = TextAlignment.Center;
-            textMesh.color = Color.white;
+            var movement = go.GetComponent<Antigravity.Player.PlayerMovement>();
+            if (movement != null) movement.enabled = false;
 
-            // ISOLATION: Remove or disable everything that could act on local input
-            // (Repeated logic from previously but even more thorough)
-            Transform cam = go.transform.Find("Main Camera");
-            if (cam != null) cam.gameObject.SetActive(false);
-            
-            var localScripts = go.GetComponentsInChildren<MonoBehaviour>();
-            foreach(var s in localScripts) {
-                // If the script is NOT NetworkPlayer, disable it.
-                if (!(s is NetworkPlayer) && !(s is SpriteRenderer) && !(s is Animator)) {
-                    s.enabled = false;
-                }
-            }
+            var shoot = go.GetComponent<Antigravity.Shooting.ShootController>();
+            if (shoot != null) shoot.enabled = false;
+
+            // Audio & Camera
+            Camera c = go.GetComponentInChildren<Camera>();
+            if (c != null) DestroyImmediate(c.gameObject);
+
+            AudioListener al = go.GetComponentInChildren<AudioListener>();
+            if (al != null) DestroyImmediate(al);
 
             remotePlayers.Add(userId, np);
-            Debug.Log($"[MultiplayerSpawner] Spawned remote player: {username} ({userId}) at {go.transform.position}");
+            Debug.Log($"[DIAGNOSTIC] Spawned RED remote player: {username} at {go.transform.position}");
         }
 
         private void RemoveRemotePlayer(string userId)
