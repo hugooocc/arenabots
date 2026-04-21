@@ -125,17 +125,25 @@ wss.on('connection', async (ws, req) => {
                 });
                 console.log(`[WS] player_ready: ${ws.username || 'unknown'} (${ws.userId}) in game ${ws.gameId}`);
 
-                // Check if all registered players are ready -> send start_countdown
+                // Check if all joined players are ready -> send start_countdown
                 if (ws.gameId && ws.gameId !== 'singleplayer') {
                     try {
                         const game = await Game.findById(ws.gameId);
                         if (game) {
                             let readyCount = 0;
-                            wss.clients.forEach(c => { if (c.gameId === ws.gameId && c.isReady) readyCount++; });
-                            console.log(`[WS] Ready players: ${readyCount}/${game.maxPlayers}`);
-                            if (readyCount >= game.maxPlayers) {
-                                console.log(`[WS] All players ready in game ${ws.gameId}. Sending start_countdown.`);
-                                wss.clients.forEach(c => { if (c.gameId === ws.gameId) c.send(JSON.stringify({ tipo: 'start_countdown' })); });
+                            wss.clients.forEach(c => { 
+                                if (c.gameId === ws.gameId && c.isReady) readyCount++; 
+                            });
+                            
+                            const joinedCount = game.players.length;
+                            console.log(`[WS] Status for game ${ws.gameId}: ${readyCount} players ready out of ${joinedCount} joined (Max: ${game.maxPlayers})`);
+                            
+                            // Check against joined players, not max players
+                            if (readyCount >= joinedCount && joinedCount >= 1) {
+                                console.log(`[WS] All joined players are ready in game ${ws.gameId}. Sending start_countdown.`);
+                                wss.clients.forEach(c => { 
+                                    if (c.gameId === ws.gameId) c.send(JSON.stringify({ tipo: 'start_countdown' })); 
+                                });
                             }
                         }
                     } catch (e) { console.error('[WS] Error checking ready state:', e.message); }
