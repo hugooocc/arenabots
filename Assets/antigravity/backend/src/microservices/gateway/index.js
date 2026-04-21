@@ -13,15 +13,15 @@ const GAME_URL = 'http://game:3002';
 const STATS_URL = 'http://stats:3003';
 
 // Route API requests
-app.all('/api/auth/:path*', (req, res) => {
+app.use('/api/auth', (req, res) => {
     proxy.web(req, res, { target: AUTH_URL });
 });
 
-app.all('/api/users/:path*', (req, res) => {
+app.use('/api/users', (req, res) => {
     proxy.web(req, res, { target: STATS_URL });
 });
 
-app.all('/api/games/:path*', (req, res) => {
+app.use('/api/games', (req, res) => {
     proxy.web(req, res, { target: GAME_URL });
 });
 
