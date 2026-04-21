@@ -86,6 +86,7 @@ namespace Antigravity.Network
             }
 
             // [FIX] PROXIMIDAD FORZADA: Teletransportar cerca del local para asegurar visibilidad
+            GameObject go = Instantiate(remotePlayerPrefab);
             PlayerMovement local = Object.FindAnyObjectByType<PlayerMovement>();
             if (local != null && local.GetComponent<NetworkPlayer>() == null) {
                 go.transform.position = local.transform.position + new Vector3(remotePlayers.Count + 1f, 0, 0);
