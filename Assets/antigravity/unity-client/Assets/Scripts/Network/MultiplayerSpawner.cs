@@ -85,12 +85,31 @@ namespace Antigravity.Network
                 return;
             }
 
-            GameObject go = Instantiate(remotePlayerPrefab, Vector3.zero, Quaternion.identity);
+            GameObject go = Instantiate(remotePlayerPrefab, new Vector3(remotePlayers.Count * 2f, 0, 0), Quaternion.identity);
             go.name = isMe ? "RemoteClone_OF_SELF" : "RemotePlayer_" + username;
             
             NetworkPlayer np = go.AddComponent<NetworkPlayer>();
             np.userId = userId;
             np.username = username;
+
+            // VISUAL DIFFERENTIATION: Make remote players slightly different color
+            var renderer = go.GetComponentInChildren<SpriteRenderer>();
+            if (renderer != null) {
+                renderer.color = new Color(0.7f, 0.7f, 1f, 1f); // Bluish tint for remote players
+            }
+
+            // NAME LABEL: Simple legacy TextMesh above head
+            GameObject nameLabelGo = new GameObject("NameLabel");
+            nameLabelGo.transform.SetParent(go.transform);
+            nameLabelGo.transform.localPosition = new Vector3(0, 1.2f, 0);
+            
+            var textMesh = nameLabelGo.AddComponent<TextMesh>();
+            textMesh.text = username;
+            textMesh.fontSize = 24;
+            textMesh.characterSize = 0.1f;
+            textMesh.anchor = TextAnchor.MiddleCenter;
+            textMesh.alignment = TextAlignment.Center;
+            textMesh.color = Color.white;
 
             // ISOLATION: Remove or disable everything that could act on local input
             // (Repeated logic from previously but even more thorough)
@@ -106,7 +125,7 @@ namespace Antigravity.Network
             }
 
             remotePlayers.Add(userId, np);
-            Debug.Log($"[MultiplayerSpawner] Spawned remote player: {username} ({userId})");
+            Debug.Log($"[MultiplayerSpawner] Spawned remote player: {username} ({userId}) at {go.transform.position}");
         }
 
         private void RemoveRemotePlayer(string userId)

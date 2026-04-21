@@ -83,6 +83,9 @@ namespace Antigravity.GameMode
                 PlayerMovement localPlayer = UnityEngine.Object.FindAnyObjectByType<PlayerMovement>();
                 if (localPlayer != null)
                 {
+                    // Move local player to a distinct spawn point
+                    localPlayer.transform.position = new Vector3(-2f, 0, 0);
+                    
                     localPlayer.gameObject.AddComponent<Antigravity.Network.PlayerNetworkSync>();
                     Debug.Log("[MatchManager] Initialized multiplayer sync for LOCAL player.");
                 }

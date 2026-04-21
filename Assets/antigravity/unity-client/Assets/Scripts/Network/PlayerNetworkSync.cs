@@ -17,6 +17,9 @@ namespace Antigravity.Network
         {
             rb = GetComponent<Rigidbody2D>();
             animator = GetComponentInChildren<Animator>();
+            
+            // Sync initial position immediately
+            Invoke(nameof(SendUpdate), 0.1f);
         }
 
         private void Update()
