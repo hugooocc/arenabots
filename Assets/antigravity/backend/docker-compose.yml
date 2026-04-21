@@ -18,8 +18,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - MONGODB_URI=mongodb://mongodb:27017/arena_bots
-      - JWT_SECRET=your_super_secret_key_change_in_production
+      - MONGODB_URI=mongodb://mongodb:27017/antigravity
+      - JWT_SECRET=super_secret_antigravity_key_2026
     depends_on:
       - auth
       - game
@@ -32,8 +32,8 @@ services:
     container_name: arena-auth
     command: npm run auth
     environment:
-      - MONGODB_URI=mongodb://mongodb:27017/arena_bots
-      - JWT_SECRET=your_super_secret_key_change_in_production
+      - MONGODB_URI=mongodb://mongodb:27017/antigravity
+      - JWT_SECRET=super_secret_antigravity_key_2026
       - AUTH_PORT=3001
     depends_on:
       - mongodb
@@ -45,8 +45,8 @@ services:
     container_name: arena-game
     command: npm run game
     environment:
-      - MONGODB_URI=mongodb://mongodb:27017/arena_bots
-      - JWT_SECRET=your_super_secret_key_change_in_production
+      - MONGODB_URI=mongodb://mongodb:27017/antigravity
+      - JWT_SECRET=super_secret_antigravity_key_2026
       - GAME_PORT=3002
     depends_on:
       - mongodb
@@ -58,8 +58,8 @@ services:
     container_name: arena-stats
     command: npm run stats
     environment:
-      - MONGODB_URI=mongodb://mongodb:27017/arena_bots
-      - JWT_SECRET=your_super_secret_key_change_in_production
+      - MONGODB_URI=mongodb://mongodb:27017/antigravity
+      - JWT_SECRET=super_secret_antigravity_key_2026
       - STATS_PORT=3003
     depends_on:
       - mongodb

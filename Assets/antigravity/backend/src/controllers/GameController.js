@@ -69,19 +69,30 @@ class GameController {
       const { code } = req.body;
       const userId = req.user.id;
 
+      console.log(`[GameController] joinPrivate -> code="${code}", userId="${userId}"`);
+
       if (!code) {
         return res.status(400).json({ message: 'Se requiere código de sala' });
       }
 
       const game = await GameService.joinGameByCode(code, userId);
+
+      if (!game) {
+        console.error('[GameController] joinPrivate -> GameService returned null/undefined');
+        return res.status(404).json({ message: 'Sala no encontrada' });
+      }
+
+      console.log(`[GameController] joinPrivate -> OK, gameId=${game._id}`);
+
       res.json({
         message: 'Te has unido a la partida',
         game: {
           id: game._id,
-          players: game.players.map(p => p._id || p)
+          players: (game.players || []).map(p => p._id || p)
         }
       });
     } catch (error) {
+      console.error('[GameController] joinPrivate ERROR:', error.message, error.stack);
       const status = (error.message === 'Game is full' || error.message === 'Sala no encontrada o ya ha comenzado') ? 403 : 500;
       res.status(status).json({ message: error.message });
     }
