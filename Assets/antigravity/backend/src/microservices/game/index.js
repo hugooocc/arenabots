@@ -18,10 +18,11 @@ const PORT = process.env.GAME_PORT || 3002;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/arena_bots';
 
 mongoose.connect(MONGODB_URI)
-    .then(async () => {
+    .then(() => {
         console.log(`[Game Service] Connected to MongoDB`);
-        // Cleanup old games
-        await Game.updateMany({ status: { $ne: 'FINISHED' } }, { status: 'FINISHED' });
+        // NOTE: We intentionally do NOT wipe existing games on startup.
+        // Wiping would cause 500 errors for any player trying to join
+        // a game created before a server restart.
     })
     .catch(err => console.error(`[Game Service] MongoDB error:`, err));
 
