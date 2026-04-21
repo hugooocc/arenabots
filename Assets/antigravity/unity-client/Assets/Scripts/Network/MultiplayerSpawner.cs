@@ -114,8 +114,12 @@ namespace Antigravity.Network
             foreach(var type in scriptsToDestroy) {
                 var comp = go.GetComponentInChildren(type);
                 if (comp != null) {
-                    if (comp is GameObject g) DestroyImmediate(g);
-                    else DestroyImmediate(comp);
+                    if (type == typeof(Camera)) {
+                        // Cameras usually have their own GameObject we want to kill
+                        DestroyImmediate(comp.gameObject);
+                    } else {
+                        DestroyImmediate(comp);
+                    }
                 }
             }
 
