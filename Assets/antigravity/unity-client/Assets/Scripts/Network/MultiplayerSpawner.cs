@@ -104,7 +104,10 @@ namespace Antigravity.Network
             if (sync != null) DestroyImmediate(sync);
             
             var movement = go.GetComponent<Antigravity.Player.PlayerMovement>();
-            if (movement != null) movement.enabled = false;
+            if (movement != null) {
+                movement.canMove = false;
+                movement.enabled = false;
+            }
 
             var shoot = go.GetComponent<Antigravity.Shooting.ShootController>();
             if (shoot != null) shoot.enabled = false;

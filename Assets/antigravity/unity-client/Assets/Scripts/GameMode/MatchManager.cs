@@ -123,19 +123,34 @@ namespace Antigravity.GameMode
                     }
                 }
 
-                // 3. IDENTIFY LOCAL PLAYER
-                PlayerMovement localPlayer = UnityEngine.Object.FindAnyObjectByType<PlayerMovement>();
+                // 3. IDENTIFY LOCAL PLAYER (HARDENED)
+                PlayerMovement[] allMovements = UnityEngine.Object.FindObjectsByType<PlayerMovement>(FindObjectsSortMode.None);
+                PlayerMovement localPlayer = null;
+
+                foreach (var pm in allMovements)
+                {
+                    // Un jugador local de verdad es aquel que tiene PlayerMovement PERO NO NetworkPlayer
+                    if (pm.GetComponent<Antigravity.Network.NetworkPlayer>() == null)
+                    {
+                        localPlayer = pm;
+                        break;
+                    }
+                }
+
                 if (localPlayer != null)
                 {
                     localPlayer.gameObject.name = "LOCAL_PLAYER_" + Antigravity.Auth.GameSession.Username;
                     localPlayer.transform.position = new Vector3(-3f, 0, 0); // Start far left
                     
-                    // Add sync only to THIS local player
-                    var sync = localPlayer.gameObject.AddComponent<Antigravity.Network.PlayerNetworkSync>();
+                    // Asegurarnos de que no tenga ya un sync (por si acaso)
+                    if (localPlayer.GetComponent<Antigravity.Network.PlayerNetworkSync>() == null)
+                    {
+                        localPlayer.gameObject.AddComponent<Antigravity.Network.PlayerNetworkSync>();
+                    }
                     Debug.Log($"[DIAGNOSTIC] Local player identified and synced: {localPlayer.gameObject.name}");
                 }
                 else {
-                    Debug.LogWarning("[MatchManager] Local PlayerMovement NOT FOUND in scene!");
+                    Debug.LogError("[MatchManager] CRITICAL: Local PlayerMovement NOT FOUND in scene! Movements available: " + allMovements.Length);
                 }
                 
                 // Keep players disabled while waiting for connection
@@ -211,9 +226,15 @@ namespace Antigravity.GameMode
                 if (countdownContainer != null) countdownContainer.style.display = DisplayStyle.None;
             }
 
-            // Enable movement back
-            players = FindObjectsOfType<PlayerMovement>();
-            foreach(var p in players) p.canMove = true;
+            // Enable movement back ONLY for local player
+            players = FindObjectsByType<PlayerMovement>(FindObjectsSortMode.None);
+            foreach(var p in players) 
+            {
+                // Solo activamos el movimiento si NO es un jugador de red
+                if (p.GetComponent<Antigravity.Network.NetworkPlayer>() == null) {
+                    p.canMove = true;
+                }
+            }
 
             // Notify server that we are ready (this triggers waves in MP)
             if (Antigravity.Auth.GameSession.CurrentGameId != "singleplayer")

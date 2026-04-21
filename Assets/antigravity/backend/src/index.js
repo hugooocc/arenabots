@@ -156,6 +156,7 @@ wss.on('connection', async (ws, req) => {
             if (data.tipo === 'player_ready') {
                 const gameId = ws.gameId;
                 const userId = ws.userId;
+                ws.username = data.username || "Jugador"; // GUARDAR EL USERNAME
                 
                 // 1. Enviar lista actual al jugador que acaba de decir "estoy listo"
                 const existingPlayers = [];
