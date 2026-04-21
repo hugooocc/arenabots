@@ -165,7 +165,8 @@ public class MainMenuUI : MonoBehaviour
     {
         if (gameNameInput == null || string.IsNullOrWhiteSpace(gameNameInput.value)) return;
         bool isPrivate = gameIsPrivateToggle != null ? gameIsPrivateToggle.value : false;
-        StartCoroutine(CreateGameRoutine(gameNameInput.value, maxPlayersSlider.value, isPrivate));
+        // Limitemos las salas a 2 jugadores por defecto para simplificar el flujo
+        StartCoroutine(CreateGameRoutine(gameNameInput.value, 2, isPrivate));
     }
 
     IEnumerator CreateGameRoutine(string name, int maxPlayers, bool isPrivate)

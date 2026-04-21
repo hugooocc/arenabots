@@ -8,7 +8,7 @@ class GameService {
     }
     const gameData = {
       name,
-      maxPlayers,
+      maxPlayers: 2, // Hardcoded to 2 as per user request to simplify flow
       password,
       players: [ownerId],
       status: 'WAITING'
