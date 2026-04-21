@@ -48,6 +48,23 @@ const authenticate = (req, res, next) => {
     }
 };
 
+// Diagnostic endpoint - no auth required - helps verify server has latest code
+app.get('/api/games/health', async (req, res) => {
+    try {
+        const Game = require('../../models/Game');
+        const count = await Game.countDocuments();
+        res.json({ 
+            status: 'ok', 
+            version: '2026-04-21-v5',
+            dbConnected: true,
+            totalGames: count,
+            dbName: process.env.MONGODB_URI
+        });
+    } catch(e) {
+        res.json({ status: 'db_error', error: e.message });
+    }
+});
+
 // Game API Routes
 app.post('/api/games', authenticate, (req, res) => gameController.create(req, res));
 app.get('/api/games', authenticate, (req, res) => gameController.list(req, res));

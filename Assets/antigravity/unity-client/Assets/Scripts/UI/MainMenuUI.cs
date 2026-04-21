@@ -331,7 +331,8 @@ public class MainMenuUI : MonoBehaviour
             }
             else
             {
-                Debug.LogError("Error joining private game: " + www.error);
+                string serverMsg = www.downloadHandler != null ? www.downloadHandler.text : "(sin respuesta)";
+                Debug.LogError($"Error joining private game: {www.error} | Server: {serverMsg}");
             }
         }
     }
