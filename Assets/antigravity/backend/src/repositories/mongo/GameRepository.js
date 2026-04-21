@@ -1,5 +1,6 @@
 const IGameRepository = require('../IGameRepository');
 const Game = require('../../models/Game');
+require('../../models/User'); // Required so Mongoose knows the User schema for populate()
 
 class GameRepository extends IGameRepository {
   async createGame(gameData) {
