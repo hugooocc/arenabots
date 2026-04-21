@@ -32,13 +32,20 @@ namespace Antigravity.Network
                 lr.SetPosition(1, transform.position);
             }
             
-            // Force visibility
+            // Force visibility and correct scale/layer
+            transform.localScale = new Vector3(1f, 1f, 1f);
+            gameObject.layer = 0; // Default layer
+
             var renderers = GetComponentsInChildren<SpriteRenderer>();
             foreach(var r in renderers) {
                 r.enabled = true;
                 r.color = Color.red;
                 r.sortingOrder = 1000;
             }
+
+            // Remove animator to prevent it from hiding the sprite or overriding color
+            var anim = GetComponentInChildren<Animator>();
+            if (anim != null) Destroy(anim);
         }
     }
 }
