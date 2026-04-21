@@ -18,7 +18,13 @@ class GameRepository extends IGameRepository {
   }
 
   async findPrivateByCode(code) {
-    return await Game.findOne({ status: 'WAITING', password: code }).populate('players', 'username');
+    // Accept WAITING or PLAYING in case host already entered the arena
+    const game = await Game.findOne({
+      password: code,
+      status: { $in: ['WAITING', 'PLAYING'] }
+    }).populate('players', 'username');
+    console.log(`[GameRepository] findPrivateByCode('${code}') -> ${game ? game._id : 'NOT FOUND'}`);
+    return game;
   }
 
   async updateStatus(gameId, status) {

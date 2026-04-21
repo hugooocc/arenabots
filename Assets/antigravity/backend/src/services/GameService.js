@@ -64,7 +64,9 @@ class GameService {
       return game;
     }
 
-    return await GameRepository.joinGame(game._id, userId);
+    const updated = await GameRepository.joinGame(game._id, userId);
+    console.log(`[GameService] Player ${userId} joined private game ${game._id} (code: ${code})`);
+    return updated;
   }
 
   async startGame(gameId, userId) {
