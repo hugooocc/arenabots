@@ -98,6 +98,7 @@ namespace Antigravity.Network
             go.name = "REMOTE_" + username + "_" + userId;
 
             NetworkPlayer np = go.AddComponent<NetworkPlayer>();
+            go.AddComponent<VisibilityPointer>();
             np.userId = userId;
             np.username = username;
 
