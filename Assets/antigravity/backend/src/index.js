@@ -24,7 +24,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/arena_bot
     })
     .catch(err => console.error('MongoDB connection error:', err));
 
-const { handleShoot, handleImpact, players } = require('./websocket/shootHandler');
+const { handleShoot, handleImpact, handleDeath, players } = require('./websocket/shootHandler');
 const userController = require('./controllers/UserController');
 const gameController = require('./controllers/GameController');
 const { validateRegistration, validateLogin } = require('./middleware/validation');
@@ -58,7 +58,7 @@ const authenticate = (req, res, next) => {
 
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
-const waveManager = new WaveManager(wss);
+const waveManager = new WaveManager(wss, players);
 
 app.set('wss', wss);
 
@@ -185,8 +185,11 @@ wss.on('connection', async (ws, req) => {
                 handleShoot(ws, data, wss);
             } else if (data.tipo === 'impacto_proyectil') {
                 handleImpact(ws, data, wss);
-            } else if (data.tipo === 'movimiento') {
-                // Sincronización de posición y estado de animación
+                const userId = ws.userId;
+                if (userId && players.has(userId)) {
+                    players.get(userId).position = data.posicion;
+                }
+
                 const movePayload = JSON.stringify({
                     tipo: 'jugador_movido',
                     userId: ws.userId,
@@ -231,7 +234,6 @@ wss.on('connection', async (ws, req) => {
                     countdownStates.delete(gId);
                 }
             } else if (data.tipo === 'player_dead') {
-                const { handleDeath } = require('./websocket/shootHandler');
                 handleDeath(ws, data, wss);
             }
         } catch (e) {

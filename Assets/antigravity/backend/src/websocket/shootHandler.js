@@ -147,6 +147,8 @@ function handleDeath(ws, data, wss) {
     });
 
     const anyAlive = roomPlayers.some(p => p.isAlive);
+    console.log(`[WS] ${partidaId}: ${roomPlayers.filter(p=>p.isAlive).length} vivos / ${roomPlayers.length} totales`);
+
     if (!anyAlive && roomPlayers.length > 0) {
         console.log(`[WS] ¡TODOS MUERTOS en ${partidaId}! Enviando estadísticas finales.`);
         

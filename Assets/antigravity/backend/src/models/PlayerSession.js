@@ -5,6 +5,7 @@ class PlayerSession {
         this.lastFireTimestamps = []; // Rolling cache of last 10 firing times
         this.kills = 0;
         this.startTime = Date.now();
+        this.position = { x: 0, y: 0 }; // Current position for AI tracking
     }
 
     addFireTimestamp(timestamp) {

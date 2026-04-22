@@ -19,7 +19,7 @@ namespace Antigravity.Player
         {
             animator = GetComponentInChildren<Animator>();
             currentHealth = maxHealth;
-            OnHealthChanged?.Invoke(currentHealth, maxHealth);
+            OnHealthChanged?.Invoke(Mathf.Max(0, currentHealth), maxHealth);
         }
 
         public void TakeDamage(int damage)
@@ -29,7 +29,7 @@ namespace Antigravity.Player
             currentHealth -= damage;
             Debug.Log($"[PlayerHealth] OUCH! El jugador recibió {damage} de daño. Vida: {currentHealth}/{maxHealth}");
             
-            OnHealthChanged?.Invoke(currentHealth, maxHealth);
+            OnHealthChanged?.Invoke(Mathf.Max(0, currentHealth), maxHealth);
 
         if (currentHealth <= 0)
         {

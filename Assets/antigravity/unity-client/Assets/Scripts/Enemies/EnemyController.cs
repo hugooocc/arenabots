@@ -78,17 +78,31 @@ namespace Antigravity.Enemies
             }
         }
 
+        public void SetTarget(Transform target)
+        {
+            if (isDead) return;
+            targetPlayer = target;
+        }
+
         private void FixedUpdate()
         {
-            // Si no tenemos target o el que tenemos ha muerto, buscamos otro
-            if (targetPlayer == null || (targetPlayer.TryGetComponent<Antigravity.Player.PlayerHealth>(out var hp) && hp.currentHealth <= 0)) 
+            // En multijugador, esperamos a que el servidor nos diga a quién atacar.
+            // Solo buscamos localmente si es singleplayer o si el servidor aún no ha mandado targets.
+            bool isMultiplayer = Antigravity.Auth.GameSession.CurrentGameId != "singleplayer";
+            
+            if (!isMultiplayer)
             {
-                FindPlayer();
-                if (targetPlayer == null)
+                // Si no tenemos target o el que tenemos ha muerto, buscamos otro
+                if (targetPlayer == null || (targetPlayer.TryGetComponent<Antigravity.Player.PlayerHealth>(out var hp) && hp.currentHealth <= 0)) 
                 {
-                    if (rb != null) rb.linearVelocity = Vector2.zero;
-                    return;
+                    FindPlayer();
                 }
+            }
+
+            if (targetPlayer == null)
+            {
+                if (rb != null) rb.linearVelocity = Vector2.zero;
+                return;
             }
 
             // Movimiento IA: Calcular la dirección hacia el jugador y aplicarla a rb.linearVelocity

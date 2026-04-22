@@ -22,6 +22,20 @@ namespace Antigravity.Enemies
         public string enemigoId;
     }
 
+    [Serializable]
+    public class EnemyTargetData
+    {
+        public string id;
+        public string targetId;
+    }
+
+    [Serializable]
+    public class SyncEnemyTargetsData
+    {
+        public string tipo;
+        public EnemyTargetData[] targets;
+    }
+
     public class EnemySpawner : MonoBehaviour
     {
         public static EnemySpawner Instance { get; private set; }
@@ -67,6 +81,47 @@ namespace Antigravity.Enemies
                 var data = JsonUtility.FromJson<BackendEnemyDeathData>(messageJson);
                 KillEnemy(data.enemigoId);
             }
+            else if (messageJson.Contains("\"tipo\":\"sync_enemy_targets\""))
+            {
+                var data = JsonUtility.FromJson<SyncEnemyTargetsData>(messageJson);
+                UpdateEnemyTargets(data.targets);
+            }
+        }
+
+        private void UpdateEnemyTargets(EnemyTargetData[] targets)
+        {
+            foreach (var t in targets)
+            {
+                if (activeEnemies.TryGetValue(t.id, out EnemyController enemy))
+                {
+                    Transform targetTransform = FindPlayerTransformById(t.targetId);
+                    if (targetTransform != null)
+                    {
+                        enemy.SetTarget(targetTransform);
+                    }
+                }
+            }
+        }
+
+        private Transform FindPlayerTransformById(string userId)
+        {
+            // 1. Local
+            if (Antigravity.Auth.GameSession.UserId == userId)
+            {
+                var local = Object.FindObjectsByType<Antigravity.Player.PlayerMovement>(FindObjectsSortMode.None);
+                foreach (var p in local) {
+                    if (p.GetComponent<Antigravity.Network.NetworkPlayer>() == null) return p.transform;
+                }
+            }
+
+            // 2. Remotes
+            var remotes = Object.FindObjectsByType<Antigravity.Network.NetworkPlayer>(FindObjectsSortMode.None);
+            foreach (var r in remotes)
+            {
+                if (r.userId == userId) return r.transform;
+            }
+
+            return null;
         }
 
         private void SpawnEnemy(BackendEnemySpawnData data)
