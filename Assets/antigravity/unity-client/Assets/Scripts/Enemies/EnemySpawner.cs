@@ -108,14 +108,14 @@ namespace Antigravity.Enemies
             // 1. Local
             if (Antigravity.Auth.GameSession.UserId == userId)
             {
-                var local = Object.FindObjectsByType<Antigravity.Player.PlayerMovement>(FindObjectsSortMode.None);
+                var local = UnityEngine.Object.FindObjectsByType<Antigravity.Player.PlayerMovement>(FindObjectsSortMode.None);
                 foreach (var p in local) {
                     if (p.GetComponent<Antigravity.Network.NetworkPlayer>() == null) return p.transform;
                 }
             }
 
             // 2. Remotes
-            var remotes = Object.FindObjectsByType<Antigravity.Network.NetworkPlayer>(FindObjectsSortMode.None);
+            var remotes = UnityEngine.Object.FindObjectsByType<Antigravity.Network.NetworkPlayer>(FindObjectsSortMode.None);
             foreach (var r in remotes)
             {
                 if (r.userId == userId) return r.transform;
