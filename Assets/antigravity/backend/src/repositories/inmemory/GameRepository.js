@@ -1,14 +1,14 @@
 const IGameRepository = require('../IGameRepository');
-const { v4: uuidv4 } = require('uuid');
 
 class InMemoryGameRepository extends IGameRepository {
     constructor() {
         super();
         this.games = new Map();
+        this.currentId = 1;
     }
 
     async createGame(gameData) {
-        const id = uuidv4();
+        const id = (this.currentId++).toString();
         const game = { 
             id, 
             ...gameData, 

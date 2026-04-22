@@ -18,6 +18,22 @@ describe('InMemory Repositories', () => {
             expect(stats.mobsKilled).toBe(10);
             expect(stats.timeSurvived).toBe(60);
         });
+
+        it('should return all users sorted by mobsKilled', async () => {
+            // Clear or use fresh repository (InMemory is singleton here, so handle existing)
+            await userRepository.createUser({ username: 'user_A' });
+            const uB = await userRepository.createUser({ username: 'user_B' });
+            const uC = await userRepository.createUser({ username: 'user_C' });
+
+            await userRepository.updateStats(uB.id, 50, 100);
+            await userRepository.updateStats(uC.id, 100, 200);
+
+            const ranking = await userRepository.getAllUsersSorted(5);
+            expect(ranking[0].username).toBe('user_C');
+            expect(ranking[0].maxMobsKilled).toBe(100);
+            expect(ranking[1].username).toBe('user_B');
+            expect(ranking[1].maxMobsKilled).toBe(50);
+        });
     });
 
     describe('GameRepository', () => {

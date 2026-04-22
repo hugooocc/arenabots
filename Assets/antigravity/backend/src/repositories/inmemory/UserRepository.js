@@ -1,14 +1,14 @@
 const IUserRepository = require('../IUserRepository');
-const { v4: uuidv4 } = require('uuid');
 
 class InMemoryUserRepository extends IUserRepository {
     constructor() {
         super();
         this.users = new Map();
+        this.currentId = 1;
     }
 
     async createUser(userData) {
-        const id = uuidv4();
+        const id = (this.currentId++).toString();
         const user = { 
             id, 
             ...userData, 
