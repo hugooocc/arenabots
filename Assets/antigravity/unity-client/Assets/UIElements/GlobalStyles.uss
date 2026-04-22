@@ -62,6 +62,24 @@
     color: #2d1e18;
 }
 
+.cyber-button-small {
+    background-color: #5c4033;
+    color: #f5deb3;
+    border-radius: 0;
+    border-width: 2px;
+    border-color: #3d2b22;
+    font-size: 14px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    transition-duration: 0.1s;
+}
+
+.cyber-button-small:hover {
+    background-color: #8b5a2b;
+    border-color: #cd853f;
+    color: #ffffff;
+}
+
 .cyber-title {
     color: #ffffff;
     font-size: 72px;

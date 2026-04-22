@@ -2,7 +2,7 @@
     <Style src="GlobalStyles.uss" />
     
     <!-- Game HUD Layer -->
-    <ui:VisualElement name="game-hud" style="flex-grow: 1; justify-content: space-between; padding: 30px;">
+    <ui:VisualElement name="game-hud" picking-mode="Ignore" style="flex-grow: 1; justify-content: space-between; padding: 30px;">
         
         <!-- Top Section: Pause Button (Left) and Stats (Right) -->
         <ui:VisualElement style="flex-direction: row; justify-content: space-between; align-items: flex-start;">

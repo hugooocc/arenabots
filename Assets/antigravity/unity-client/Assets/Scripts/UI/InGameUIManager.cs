@@ -99,6 +99,10 @@ namespace Antigravity.UI
             
             if (pauseButton != null) {
                 pauseButton.clicked += TogglePause;
+                // Fallback for picking issues: use direct pointer event
+                pauseButton.RegisterCallback<PointerDownEvent>(evt => {
+                    Debug.Log("[InGameUIManager] Pause button PointerDown detected.");
+                });
                 Debug.Log("[InGameUIManager] Pause button linked.");
             } else {
                 Debug.LogError("[InGameUIManager] CRITICAL: pauseButton NOT FOUND in hierarchy!");
