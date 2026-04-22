@@ -31,13 +31,16 @@ namespace Antigravity.UI
 
         // End Game Elements
         private VisualElement endGameLayer;
-        private Label finalStatsLabel;
+        private Label finalStatsKills;
+        private Label finalStatsTime;
         private Button restartButton;
         private Button mainMenuButton;
 
         // Pause Elements
         private VisualElement pauseInstance;
         private VisualElement pauseMenuInner;
+        private Label pauseStatsKills;
+        private Label pauseStatsTime;
         private Button pauseButton;
         private Button resumeButton;
         private Button quitButton;
@@ -60,13 +63,16 @@ namespace Antigravity.UI
             // 2. Find End Game elements
             endGameInstance = root.Q<VisualElement>("end-game-instance");
             endGameLayer = root.Q<VisualElement>("end-game-screen");
-            finalStatsLabel = root.Q<Label>("final-stats-label");
+            finalStatsKills = root.Q<Label>("final-stats-kills");
+            finalStatsTime = root.Q<Label>("final-stats-time");
             restartButton = root.Q<Button>("btn-restart");
             mainMenuButton = root.Q<Button>("btn-main-menu");
 
             // 3. Find Pause elements
             pauseInstance = root.Q<VisualElement>("pause-instance");
             pauseMenuInner = root.Q<VisualElement>("pause-menu");
+            pauseStatsKills = root.Q<Label>("pause-stats-kills");
+            pauseStatsTime = root.Q<Label>("pause-stats-time");
             pauseButton = root.Q<Button>("btn-pause");
             resumeButton = root.Q<Button>("btn-resume");
             quitButton = root.Q<Button>("btn-quit");
@@ -205,6 +211,14 @@ namespace Antigravity.UI
             
             if (pauseInstance != null) {
                 pauseInstance.style.display = isPaused ? DisplayStyle.Flex : DisplayStyle.None;
+                
+                if (isPaused)
+                {
+                    // Update current stats when pausing
+                    if (pauseStatsKills != null) pauseStatsKills.text = $"BAJAS: {mobsKilled}";
+                    if (pauseStatsTime != null && timePlayedLabel != null) pauseStatsTime.text = $"TIEMPO: {timePlayedLabel.text}";
+                }
+
                 Debug.Log($"[InGameUIManager] Pause instance display: {pauseInstance.style.display}");
             } else {
                 Debug.LogError("[InGameUIManager] CRITICAL: pauseInstance is NULL!");
@@ -273,11 +287,10 @@ namespace Antigravity.UI
             if (endGameLayer != null)
             {
                 endGameLayer.style.display = DisplayStyle.Flex;
-                if (finalStatsLabel != null)
-                {
-                    string timeStr = timePlayedLabel != null ? timePlayedLabel.text : "00:00";
-                    finalStatsLabel.text = $"Mobs Killed: {mobsKilled}\nTime Survived: {timeStr}";
-                }
+                
+                string timeStr = timePlayedLabel != null ? timePlayedLabel.text : "00:00";
+                if (finalStatsKills != null) finalStatsKills.text = $"BOTS ELIMINADOS: {mobsKilled}";
+                if (finalStatsTime != null) finalStatsTime.text = $"TIEMPO: {timeStr}";
             }
             StartCoroutine(UpdateStatsRoutine());
         }

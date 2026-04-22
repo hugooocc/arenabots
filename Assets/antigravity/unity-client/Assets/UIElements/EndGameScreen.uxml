@@ -11,7 +11,8 @@
         <ui:VisualElement class="cyber-panel" style="width: 500px; align-items: center; padding: 50px;">
             <ui:Label text="HAS CAÍDO" style="font-size: 72px; color: #8b0000; -unity-font-style: bold; margin-bottom: 20px; -unity-text-outline-width: 2px; -unity-text-outline-color: #2d1e18;" />
             
-            <ui:Label name="final-stats-label" text="BOTS ELIMINADOS: 0" class="cyber-label-hud" style="margin-bottom: 40px;" />
+            <ui:Label name="final-stats-kills" text="BOTS ELIMINADOS: 0" class="cyber-label-hud" style="margin-bottom: 10px; font-size: 24px;" />
+            <ui:Label name="final-stats-time" text="TIEMPO: 00:00" class="cyber-label-hud" style="margin-bottom: 40px; font-size: 24px;" />
 
             <ui:Button name="btn-restart" text="REINTENTAR" class="cyber-button-primary" style="width: 300px; margin-bottom: 20px;" />
             
