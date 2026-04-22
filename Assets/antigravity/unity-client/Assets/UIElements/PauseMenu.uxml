@@ -4,18 +4,16 @@
     <!-- Pause Menu Layer (Hidden by default) -->
     <ui:VisualElement name="pause-menu" style="flex-grow: 1; position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.85); display: none; justify-content: center; align-items: center;">
         
-        <ui:VisualElement class="cyber-panel" style="width: 400px; padding: 40px; align-items: center;">
-            <ui:Label text="PARTIDA PAUSADA" class="cyber-label-hud" style="font-size: 32px; margin-bottom: 20px;" />
+        <ui:VisualElement class="cyber-panel" style="width: 450px; padding: 50px; align-items: center;">
+            <ui:Label text="SISTEMA EN PAUSA" class="cyber-label-hud" style="font-size: 40px; margin-bottom: 30px; color: #f4a460;" />
             
-            <ui:VisualElement style="width: 100%; align-items: center; margin-bottom: 30px;">
-                <ui:Label name="pause-stats-kills" text="BAJAS: 0" style="font-size: 20px; color: #cd853f;" />
-                <ui:Label name="pause-stats-time" text="TIEMPO: 00:00" style="font-size: 20px; color: #cd853f;" />
+            <ui:VisualElement style="width: 100%; align-items: center; margin-bottom: 40px; padding: 20px; background-color: rgba(0, 0, 0, 0.3);">
+                <ui:Label name="pause-stats-kills" text="BAJAS: 0" class="cyber-label-hud" style="font-size: 24px; color: #f5deb3;" />
+                <ui:Label name="pause-stats-time" text="TIEMPO: 00:00" class="cyber-label-hud" style="font-size: 24px; color: #f5deb3;" />
             </ui:VisualElement>
 
-            <ui:VisualElement style="width: 100%; height: 1px; background-color: #cd853f; opacity: 0.3; margin-bottom: 30px;" />
-
-            <ui:Button name="btn-resume" text="REANUDAR CONEXIÓN" class="cyber-button" style="width: 100%; margin-bottom: 15px;" />
-            <ui:Button name="btn-quit" text="ABORTAR MISIÓN" class="cyber-button" style="width: 100%; background-color: rgba(255, 0, 85, 0.2); border-color: #ff0055;" />
+            <ui:Button name="btn-resume" text="CONTINUAR" class="cyber-button-primary" style="width: 100%; margin-bottom: 15px;" />
+            <ui:Button name="btn-quit" text="ABORTAR MISIÓN" class="cyber-button" style="width: 100%;" />
 
             <ui:Label text="ESTADO: ESPERANDO ÓRDENES..." style="margin-top: 30px; color: #00f2ff; opacity: 0.5; font-size: 10px; letter-spacing: 2px;" />
         </ui:VisualElement>
