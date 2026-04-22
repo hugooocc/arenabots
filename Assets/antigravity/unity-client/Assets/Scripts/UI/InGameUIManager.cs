@@ -191,16 +191,17 @@ namespace Antigravity.UI
             if (endGameInstance != null)
             {
                 endGameInstance.style.display = DisplayStyle.Flex;
-                if (finalStatsLabel != null)
+                if (finalStatsKills != null)
                 {
                     string summary = "RESULTADOS DE LA INCURSIÓN:\n\n";
                     foreach (var s in stats) {
                         string shortId = s.userId != null && s.userId.Length > 6 ? s.userId.Substring(0, 6) : "USER";
                         summary += $"ID: {shortId} | Bajas: {s.kills} | Tiempo: {s.time}s\n";
                     }
-                    finalStatsLabel.text = summary;
-                    finalStatsLabel.style.fontSize = 20; 
+                    finalStatsKills.text = summary;
+                    finalStatsKills.style.fontSize = 20; 
                 }
+                if (finalStatsTime != null) finalStatsTime.text = ""; // Clear time label in MP summary
             }
         }
 
