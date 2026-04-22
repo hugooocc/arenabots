@@ -98,7 +98,9 @@ public class SinglePlayerManager : MonoBehaviour
 
     public void OnBotKilled()
     {
-        if (!gameStarted) return; // IGNORAR muertes antes de que empiece la partida de verdad
+        // IGNORAR muertes si no estamos en modo un jugador o si la partida no ha empezado
+        bool isMultiplayer = Antigravity.Auth.GameSession.CurrentGameId != "singleplayer";
+        if (!gameStarted || isMultiplayer) return; 
 
         score++;
         Debug.Log("Bot killed! Current score: " + score);

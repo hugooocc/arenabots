@@ -71,6 +71,7 @@ namespace Antigravity.Shooting
 
                 // Enviar un payload JSON al servidor mediante NetworkManager
                 ImpactPayload hit = new ImpactPayload {
+                    tipo = "impacto_proyectil",
                     partidaId = Antigravity.Auth.GameSession.CurrentGameId ?? "singleplayer",
                     enemigoId = enemy.EnemyId,
                     dano = 25
