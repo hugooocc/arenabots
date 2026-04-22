@@ -54,15 +54,59 @@ namespace Antigravity.GameMode
             }
         }
 
-        private void Update()
+    private void Update()
+    {
+        // Periodic check to log state to console
+        if (Time.frameCount % 300 == 0 && Antigravity.Auth.GameSession.CurrentGameId != "singleplayer") {
+            var localPlayers = FindObjectsByType<Antigravity.Player.PlayerMovement>(FindObjectsSortMode.None);
+            var remotePlayers = FindObjectsByType<Antigravity.Network.NetworkPlayer>(FindObjectsSortMode.None);
+            Debug.Log($"[DIAGNOSTIC] Clients in Scene: Local={localPlayers.Length}, Remote={remotePlayers.Length}");
+        }
+
+        // CONTROL DE ESPECTADOR
+        if (Antigravity.Auth.GameSession.CurrentGameId != "singleplayer")
         {
-            // Periodic check to log state to console
-            if (Time.frameCount % 300 == 0 && Antigravity.Auth.GameSession.CurrentGameId != "singleplayer") {
-                var localPlayers = FindObjectsByType<Antigravity.Player.PlayerMovement>(FindObjectsSortMode.None);
-                var remotePlayers = FindObjectsByType<Antigravity.Network.NetworkPlayer>(FindObjectsSortMode.None);
-                Debug.Log($"[DIAGNOSTIC] Clients in Scene: Local={localPlayers.Length}, Remote={remotePlayers.Length}");
+            CheckSpectatorMode();
+        }
+    }
+
+    private void CheckSpectatorMode()
+    {
+        // Buscamos al jugador local
+        var localPlayer = FindLocalPlayer();
+        if (localPlayer != null && localPlayer.TryGetComponent<PlayerHealth>(out var health))
+        {
+            if (health.currentHealth <= 0)
+            {
+                // Si el local está muerto, buscamos un aliado vivo
+                var camera = FindAnyObjectByType<Antigravity.CameraSystem.CameraFollow>();
+                if (camera != null)
+                {
+                    var remotes = FindObjectsByType<Antigravity.Network.NetworkPlayer>(FindObjectsSortMode.None);
+                    foreach (var r in remotes)
+                    {
+                        // En multijugador, si hay remotes, seguimos al primero que encontremos
+                        if (camera.target != r.transform)
+                        {
+                            Debug.Log($"[MatchManager] Espectador: Cambiando cámara a {r.username}");
+                            camera.target = r.transform;
+                            break;
+                        }
+                    }
+                }
             }
         }
+    }
+
+    private PlayerMovement FindLocalPlayer()
+    {
+        var allpm = FindObjectsByType<PlayerMovement>(FindObjectsSortMode.None);
+        foreach (var pm in allpm)
+        {
+            if (pm.GetComponent<Antigravity.Network.NetworkPlayer>() == null) return pm;
+        }
+        return null;
+    }
 
         private System.Collections.Generic.List<string> errorHistory = new System.Collections.Generic.List<string>();
 
@@ -96,6 +140,12 @@ namespace Antigravity.GameMode
             }
             else
             {
+                // Silenciar el spawner local en multijugador para que no haya duplicados
+                if (singlePlayerManager != null) {
+                    singlePlayerManager.enabled = false;
+                    Debug.Log("[MatchManager] SinglePlayerManager desactivado en modo multijugador.");
+                }
+
                 if (countdownLabel != null) 
                 {
                     countdownLabel.style.fontSize = 60; // Texto más pequeño para el mensaje de espera
@@ -211,6 +261,10 @@ namespace Antigravity.GameMode
                 if (msg.tipo == "start_countdown")
                 {
                     StartCoroutine(StartMatchCountdown());
+                }
+                else if (msg.tipo == "jugador_muerto")
+                {
+                    Debug.Log($"[MatchManager] Notificación de muerte recibida para un aliado.");
                 }
             } catch (System.Exception e) {
                 Debug.LogError("[MatchManager] Error parsing message: " + e.Message);

@@ -17,21 +17,31 @@
             
             <ui:VisualElement class="multiplayer-content">
                 <!-- Create Room -->
-                <ui:VisualElement class="multiplayer-section">
-                    <ui:Label text="NOMBRE DE LA OPERACIÓN" class="cyber-input-label" />
+                <ui:VisualElement class="multiplayer-section" style="border-right-width: 1px; border-right-color: rgba(0, 242, 255, 0.2); padding-right: 20px;">
+                    <ui:Label text="CREAR NUEVA OPERACIÓN" class="section-title" style="margin-bottom: 15px;" />
+                    <ui:Label text="NOMBRE DE LA SALA" class="cyber-input-label" />
                     <ui:TextField name="game-name-input" class="cyber-input" />
-                    <ui:Toggle label="PRIVADA" name="game-is-private-toggle" class="cyber-toggle" />
-                    <ui:SliderInt label="JUGADORES" value="4" high-value="10" low-value="2" name="max-players-slider" class="cyber-slider" />
-                    <ui:Button text="INICIAR PROTOCOLO" name="create-button" class="cyber-button cyber-button-primary" />
+                    <ui:Toggle label="SALA PRIVADA (CON CÓDIGO)" name="game-is-private-toggle" class="cyber-toggle" />
+                    
+                    <ui:VisualElement style="background-color: rgba(0, 255, 157, 0.1); border-width: 1px; border-color: #00ff9d; border-radius: 5px; padding: 10px; margin: 10px 0; align-items: center;">
+                        <ui:Label text="MODO 2 VS 2 ACTIVADO" style="color: #00ff9d; -unity-font-style: bold; letter-spacing: 1px;" />
+                    </ui:VisualElement>
+                    
+                    <ui:Button text="INICIAR PARTIDA" name="create-button" class="cyber-button cyber-button-primary" style="margin-top: 10px;" />
                 </ui:VisualElement>
                 
                 <!-- Join Room -->
-                <ui:VisualElement class="multiplayer-section">
-                    <ui:Label text="SALAS ACTIVAS" class="section-title" />
-                    <ui:ScrollView name="games-scroll-view" class="games-list-view" />
-                    <ui:VisualElement class="multiplayer-actions">
-                        <ui:Button text="SYNC" name="refresh-button" class="cyber-button" />
-                        <ui:Button text="CÓDIGO" name="join-by-code-button" class="cyber-button" />
+                <ui:VisualElement class="multiplayer-section" style="padding-left: 20px;">
+                    <ui:Label text="SALAS PÚBLICAS" class="section-title" />
+                    <ui:ScrollView name="games-scroll-view" class="games-list-view" style="height: 200px; background-color: rgba(0,0,0,0.3); margin-bottom: 15px;" />
+                    
+                    <ui:VisualElement class="multiplayer-actions" style="flex-direction: column;">
+                        <ui:Button text="ACTUALIZAR LISTA" name="refresh-button" class="cyber-button" style="width: 100%;" />
+                        
+                        <ui:VisualElement style="height: 2px; background-color: rgba(255, 255, 255, 0.1); margin: 15px 0;" />
+                        
+                        <ui:Label text="¿TIENES UN CÓDIGO?" class="cyber-input-label" style="-unity-text-align: middle-center;" />
+                        <ui:Button text="UNIRSE A SALA PRIVADA" name="join-by-code-button" class="cyber-button" style="width: 100%; border-color: #ff8c00; color: #ff8c00;" />
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>

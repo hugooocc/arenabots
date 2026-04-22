@@ -31,11 +31,21 @@ namespace Antigravity.Player
             
             OnHealthChanged?.Invoke(currentHealth, maxHealth);
 
-            if (currentHealth <= 0)
+        if (currentHealth <= 0)
+        {
+            if (Antigravity.Auth.GameSession.CurrentGameId != "singleplayer")
             {
-                Die();
+                var nm = Antigravity.Shooting.NetworkManager.Instance;
+                if (nm != null)
+                {
+                    string json = $"{{\"tipo\":\"player_dead\",\"partidaId\":\"{Antigravity.Auth.GameSession.CurrentGameId}\"}}";
+                    nm.SendMessage(json);
+                    Debug.Log("[PlayerHealth] Notificando muerte al servidor...");
+                }
             }
+            Die();
         }
+    }
 
         private void Die()
         {

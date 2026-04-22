@@ -28,7 +28,6 @@ public class MainMenuUI : MonoBehaviour
 
     private TextField gameNameInput;
     private Toggle gameIsPrivateToggle;
-    private SliderInt maxPlayersSlider;
     private ScrollView gamesScrollView;
     private Button createButton;
     private Button refreshButton;
@@ -55,7 +54,6 @@ public class MainMenuUI : MonoBehaviour
         // Query the elements
         gameNameInput = root.Q<TextField>("game-name-input");
         gameIsPrivateToggle = root.Q<Toggle>("game-is-private-toggle");
-        maxPlayersSlider = root.Q<SliderInt>("max-players-slider");
         gamesScrollView = root.Q<ScrollView>("games-scroll-view");
         
         createButton = root.Q<Button>("create-button");
@@ -74,13 +72,6 @@ public class MainMenuUI : MonoBehaviour
         copyEnterButton = root.Q<Button>("copy-enter-button");
 
         // Set up interactions
-        if (maxPlayersSlider != null)
-        {
-            maxPlayersSlider.RegisterValueChangedCallback(evt => {
-                maxPlayersSlider.label = $"Máximo de Jugadores: {evt.newValue}";
-            });
-        }
-
         if (createButton != null) createButton.clicked += CreateGame;
         if (refreshButton != null) refreshButton.clicked += RefreshGamesList;
         

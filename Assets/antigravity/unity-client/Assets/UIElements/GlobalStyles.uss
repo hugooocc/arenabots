@@ -1,7 +1,15 @@
 :root {
 }
 
-/* Base Utility Classes */
+.main-container {
+    background-image: url("project:/Assets/Textures/menu_background.png");
+    -unity-background-scale-mode: stretch-to-fill;
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
 .cyber-panel {
     background-color: rgba(15, 25, 35, 0.7);
     border-radius: 10px;

@@ -91,20 +91,13 @@ function handleImpact(ws, data, wss) {
     if (tipo !== 'impacto_proyectil') return;
 
     try {
-        // 2. Procesar el daño en servidor
         const nuevoHp = EnemyAI.damageEnemy(partidaId, enemigoId, dano);
 
         if (nuevoHp !== null && typeof nuevoHp === 'number') {
-            console.log(`[WS] Zombie ${enemigoId.substring(0,6)} recibió ${dano} daño. HP restante: ${nuevoHp}`);
-            
             if (nuevoHp <= 0) {
-                console.log(`[WS] Zombie ${enemigoId.substring(0,6)} murió.`);
-                
-                // Track stats
                 const killerId = ws.userId;
                 if (killerId && players.has(killerId)) {
                     players.get(killerId).kills++;
-                    console.log(`[Stats] Killer: ${killerId}, Total Kills: ${players.get(killerId).kills}`);
                 }
 
                 const deathPayload = JSON.stringify({
@@ -124,4 +117,64 @@ function handleImpact(ws, data, wss) {
     }
 }
 
-module.exports = { handleShoot, handleImpact, players };
+function handleDeath(ws, data, wss) {
+    const { tipo, partidaId } = data;
+    if (tipo !== 'player_dead') return;
+
+    const userId = ws.userId;
+    if (!userId || !players.has(userId)) return;
+
+    const session = players.get(userId);
+    if (!session.isAlive) return;
+
+    session.isAlive = false;
+    console.log(`[WS] Jugador ${userId} ha muerto en partida ${partidaId}`);
+
+    // Informar a los demás
+    const deathPayload = JSON.stringify({ tipo: 'jugador_muerto', userId });
+    wss.clients.forEach(c => {
+        if (c.readyState === WebSocket.OPEN && c.gameId === partidaId) {
+            c.send(deathPayload);
+        }
+    });
+
+    // Comprobar si todos han muerto
+    const roomPlayers = [];
+    wss.clients.forEach(c => {
+        if (c.gameId === partidaId && c.userId && players.has(c.userId)) {
+            roomPlayers.push(players.get(c.userId));
+        }
+    });
+
+    const anyAlive = roomPlayers.some(p => p.isAlive);
+    if (!anyAlive && roomPlayers.length > 0) {
+        console.log(`[WS] ¡TODOS MUERTOS en ${partidaId}! Enviando estadísticas finales.`);
+        
+        const roomStats = roomPlayers.map(p => ({
+            userId: p.playerId,
+            username: p.username || "Jugador",
+            kills: p.kills,
+            time: Math.floor((Date.now() - p.startTime) / 1000)
+        }));
+
+        const gameOverPayload = JSON.stringify({
+            tipo: 'game_over',
+            stats: roomStats
+        });
+
+        wss.clients.forEach(c => {
+            if (c.gameId === partidaId && c.readyState === WebSocket.OPEN) {
+                c.send(gameOverPayload);
+            }
+        });
+
+        // Cleanup room immediately
+        const gameService = require('../services/GameService');
+        const WaveManager = require('../services/WaveManager');
+        // We need a reference to waveManager if possible, but index.js handles it.
+        // For now, at least mark as FINISHED in DB
+        gameService.finishGame(partidaId).catch(err => console.error(err));
+    }
+}
+
+module.exports = { handleShoot, handleImpact, handleDeath, players };

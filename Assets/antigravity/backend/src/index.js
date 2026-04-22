@@ -209,7 +209,10 @@ wss.on('connection', async (ws, req) => {
                     return;
                 }
 
-                // Multiplayer synchronization for countdown
+                if (ws.userId && players.has(ws.userId)) {
+                    players.get(ws.userId).username = ws.username || "Jugador";
+                }
+
                 if (!countdownStates.has(gId)) {
                     countdownStates.set(gId, new Set());
                 }
@@ -217,7 +220,6 @@ wss.on('connection', async (ws, req) => {
                 const readyPlayers = countdownStates.get(gId);
                 readyPlayers.add(ws.userId);
 
-                // Get game info
                 const game = await Game.findById(gId);
                 const requiredReady = game ? game.maxPlayers : 1;
 
@@ -228,6 +230,9 @@ wss.on('connection', async (ws, req) => {
                     waveManager.startGame(gId);
                     countdownStates.delete(gId);
                 }
+            } else if (data.tipo === 'player_dead') {
+                const { handleDeath } = require('./websocket/shootHandler');
+                handleDeath(ws, data, wss);
             }
         } catch (e) {
             console.error(`[WS] Error parseando mensaje: ${e.message}`);

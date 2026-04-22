@@ -258,6 +258,13 @@ namespace Antigravity.UI
 
         private void ShowEndGameScreen()
         {
+            if (Antigravity.Auth.GameSession.CurrentGameId != "singleplayer")
+            {
+                Debug.Log("[InGameUIManager] Player died in multiplayer. Entering spectator view instead of showing Game Over.");
+                if (mobsKilledLabel != null) mobsKilledLabel.text = "ESTADO: CAÍDO (ESPECTADOR)";
+                return;
+            }
+
             isGameActive = false;
             if (hudInstance != null) hudInstance.style.display = DisplayStyle.None;
             if (gameHudLayer != null) gameHudLayer.style.display = DisplayStyle.None;

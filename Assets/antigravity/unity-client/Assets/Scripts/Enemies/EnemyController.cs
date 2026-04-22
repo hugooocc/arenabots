@@ -49,23 +49,39 @@ namespace Antigravity.Enemies
 
         private void FindPlayer()
         {
-            GameObject playerByTag = GameObject.FindGameObjectWithTag("Player");
-            if (playerByTag != null) 
+            // Buscamos a TODOS los que tengan PlayerHealth (Locales y de Red)
+            var allHealths = UnityEngine.Object.FindObjectsByType<Antigravity.Player.PlayerHealth>(FindObjectsSortMode.None);
+            
+            float minDistance = float.MaxValue;
+            Transform bestTarget = null;
+
+            foreach (var hp in allHealths)
             {
-                targetPlayer = playerByTag.transform;
-                return;
+                // Solo nos interesan los que están vivos
+                if (hp.currentHealth > 0)
+                {
+                    float dist = Vector3.Distance(transform.position, hp.transform.position);
+                    if (dist < minDistance)
+                    {
+                        minDistance = dist;
+                        bestTarget = hp.transform;
+                    }
+                }
             }
 
-            var playerScript = UnityEngine.Object.FindAnyObjectByType<Antigravity.Shooting.ShootController>();
-            if (playerScript != null) 
+            if (bestTarget != null)
             {
-                targetPlayer = playerScript.transform;
+                targetPlayer = bestTarget;
+            }
+            else {
+                targetPlayer = null;
             }
         }
 
         private void FixedUpdate()
         {
-            if (targetPlayer == null) 
+            // Si no tenemos target o el que tenemos ha muerto, buscamos otro
+            if (targetPlayer == null || (targetPlayer.TryGetComponent<Antigravity.Player.PlayerHealth>(out var hp) && hp.currentHealth <= 0)) 
             {
                 FindPlayer();
                 if (targetPlayer == null)
