@@ -166,6 +166,14 @@
     font-size: 14px;
 }
 
+Label {
+    color: #f5deb3;
+    -unity-font-style: bold;
+    -unity-text-outline-width: 1px;
+    -unity-text-outline-color: #2d1e18;
+    letter-spacing: 1px;
+}
+
 .unity-label {
     color: #f5deb3;
 }
@@ -175,4 +183,6 @@
     -unity-font-style: bold;
     letter-spacing: 2px;
     font-size: 20px;
+    -unity-text-outline-width: 1.5px;
+    -unity-text-outline-color: #2d1e18;
 }

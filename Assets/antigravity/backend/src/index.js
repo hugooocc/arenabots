@@ -266,31 +266,7 @@ wss.on('connection', async (ws, req) => {
             });
 
             if (!someoneLeft) {
-                console.log(`[WS] Sala ${ws.gameId} ahora está vacía. Emitiendo estadísticas finales...`);
-                
-                // Collect stats for everyone who was in this room (or is still here)
-                const roomStats = [];
-                players.forEach(session => {
-                    // This is a simplified logic: we send stats for all known players. 
-                    // In a production app, we would use a more robust room-session mapping.
-                    roomStats.push({
-                        userId: session.playerId,
-                        kills: session.kills,
-                        time: Math.floor((Date.now() - session.startTime) / 1000)
-                    });
-                });
-
-                const gameOverPayload = JSON.stringify({
-                    tipo: 'game_over',
-                    stats: roomStats
-                });
-
-                wss.clients.forEach(c => {
-                    if (c.gameId === ws.gameId && c.readyState === WebSocket.OPEN) {
-                        c.send(gameOverPayload);
-                    }
-                });
-
+                console.log(`[WS] Sala ${ws.gameId} ahora está vacía. Finalizando para limpiar la lista.`);
                 waveManager.stopGame(ws.gameId);
                 gameService.finishGame(ws.gameId).catch(err => {
                     console.error(`[WS] Error al finalizar partida ${ws.gameId}:`, err.message);

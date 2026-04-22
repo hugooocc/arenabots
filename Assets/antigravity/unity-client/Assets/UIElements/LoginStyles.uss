@@ -1,6 +1,7 @@
 .login-container {
     flex-grow: 1;
-    background-color: #1e140a;
+    background-image: url("project:/Assets/Textures/menu_background.png");
+    -unity-background-scale-mode: stretch-to-fill;
     align-items: center;
     justify-content: center;
 }
@@ -100,5 +101,6 @@
     margin-top: 32px;
     font-size: 14px;
     -unity-text-align: middle-center;
-    color: #d2b48c;
+    color: #cd853f;
+    -unity-font-style: bold;
 }
