@@ -88,12 +88,30 @@ namespace Antigravity.UI
             }
 
             // Setup Buttons
-            if (restartButton != null) restartButton.clicked += RestartGame;
-            if (mainMenuButton != null) mainMenuButton.clicked += GoToMainMenu;
+            if (restartButton != null) {
+                restartButton.clicked += RestartGame;
+                Debug.Log("[InGameUIManager] Restart button linked.");
+            }
+            if (mainMenuButton != null) {
+                mainMenuButton.clicked += GoToMainMenu;
+                Debug.Log("[InGameUIManager] Main Menu button linked.");
+            }
             
-            if (pauseButton != null) pauseButton.clicked += TogglePause;
-            if (resumeButton != null) resumeButton.clicked += TogglePause;
-            if (quitButton != null) quitButton.clicked += GoToMainMenu;
+            if (pauseButton != null) {
+                pauseButton.clicked += TogglePause;
+                Debug.Log("[InGameUIManager] Pause button linked.");
+            } else {
+                Debug.LogError("[InGameUIManager] CRITICAL: pauseButton NOT FOUND in hierarchy!");
+            }
+
+            if (resumeButton != null) {
+                resumeButton.clicked += TogglePause;
+                Debug.Log("[InGameUIManager] Resume button linked.");
+            }
+            if (quitButton != null) {
+                quitButton.clicked += GoToMainMenu;
+                Debug.Log("[InGameUIManager] Quit button linked.");
+            }
 
             // Initial Visibility
             if (endGameInstance != null) endGameInstance.style.display = DisplayStyle.None;
