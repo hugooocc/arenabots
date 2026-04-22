@@ -47,7 +47,7 @@ class WaveManager {
             // Obtener jugadores vivos en esta sala
             const roomPlayers = [];
             this.wss.clients.forEach(c => {
-                if (c.gameId === gameId && c.userId && this.players.has(c.userId)) {
+                if (c.readyState === 1 && c.gameId === gameId && c.userId && this.players && this.players.has(c.userId)) {
                     const session = this.players.get(c.userId);
                     if (session.isAlive) roomPlayers.push(session);
                 }

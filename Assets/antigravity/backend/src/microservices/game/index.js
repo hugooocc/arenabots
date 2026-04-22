@@ -28,7 +28,7 @@ mongoose.connect(MONGODB_URI)
 
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
-const waveManager = new WaveManager(wss);
+const waveManager = new WaveManager(wss, players);
 app.set('wss', wss);
 
 // Auth Middleware
@@ -166,6 +166,9 @@ wss.on('connection', async (ws, req) => {
             } else if (data.tipo === 'disparo') handleShoot(ws, data, wss);
             else if (data.tipo === 'impacto_proyectil') handleImpact(ws, data, wss);
             else if (data.tipo === 'movimiento') {
+                if (ws.userId && players.has(ws.userId)) {
+                    players.get(ws.userId).position = data.posicion;
+                }
                 const movePayload = JSON.stringify({ tipo: 'jugador_movido', userId: ws.userId, posicion: data.posicion, velocidad: data.velocidad, mirando: data.mirando });
                 wss.clients.forEach(c => { if (c !== ws && c.gameId === ws.gameId) c.send(movePayload); });
             } else if (data.tipo === 'countdown_finished') {
