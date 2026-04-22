@@ -1,26 +1,28 @@
 .login-container {
     flex-grow: 1;
-    background-color: #050a0f;
+    background-color: #1e140a;
     align-items: center;
     justify-content: center;
 }
 
 .title-label {
     font-size: 72px;
-    color: #f8fafc;
+    color: #ffffff;
     margin-bottom: 60px;
     -unity-font-style: bold;
     letter-spacing: 12px;
     -unity-text-align: middle-center;
+    -unity-text-outline-width: 2px;
+    -unity-text-outline-color: #5c4033;
 }
 
 .login-panel {
     width: 440px;
-    background-color: rgba(15, 25, 35, 0.7);
-    border-radius: 10px;
+    background-color: rgba(45, 35, 25, 0.9);
+    border-radius: 0;
     padding: 48px;
-    border-width: 1px;
-    border-color: rgba(255, 255, 255, 0.1);
+    border-width: 4px;
+    border-color: #8b5a2b;
 }
 
 .input-field {
@@ -28,7 +30,7 @@
 }
 
 .input-field > .unity-base-text-field__label {
-    color: rgba(248, 250, 252, 0.6);
+    color: #cd853f;
     font-size: 12px;
     -unity-font-style: bold;
     margin-bottom: 8px;
@@ -36,19 +38,19 @@
 }
 
 .input-field > .unity-base-text-field__input {
-    background-color: rgba(15, 23, 42, 0.4);
-    border-radius: 10px;
-    border-width: 1px;
-    border-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(30, 20, 10, 0.6);
+    border-radius: 0;
+    border-width: 3px;
+    border-color: #5c4033;
     padding: 12px 16px;
     height: 52px;
-    color: #f8fafc;
+    color: #f5deb3;
     font-size: 16px;
     transition-duration: 0.2s;
 }
 
 .input-field > .unity-base-text-field__input:focus {
-    border-color: #00f2ff;
+    border-color: #cd853f;
 }
 
 .button-container {
@@ -58,44 +60,45 @@
 
 .action-button {
     height: 54px;
-    border-radius: 10px;
-    border-width: 0;
+    border-radius: 0;
+    border-width: 4px;
+    border-color: #3d2b22;
     font-size: 16px;
     -unity-font-style: bold;
     letter-spacing: 1px;
-    transition-duration: 0.2s;
+    transition-duration: 0.1s;
     margin-bottom: 12px;
 }
 
 .login-btn {
-    background-color: #00f2ff;
-    color: white;
+    background-color: #cd853f;
+    color: #2d1e18;
 }
 
 .login-btn:hover {
-    background-color: #5df9ff;
+    background-color: #f4a460;
 }
 
 .login-btn:active {
-    background-color: #00bac4;
+    background-color: #8b5a2b;
 }
 
 .register-btn {
     background-color: transparent;
-    color: rgba(248, 250, 252, 0.6);
-    border-width: 1px;
-    border-color: rgba(255, 255, 255, 0.1);
+    color: #d2b48c;
+    border-width: 3px;
+    border-color: #5c4033;
 }
 
 .register-btn:hover {
-    color: #f8fafc;
-    background-color: rgba(255, 255, 255, 0.05);
-    border-color: #00f2ff;
+    color: #ffffff;
+    background-color: rgba(205, 133, 63, 0.1);
+    border-color: #cd853f;
 }
 
 .status-label {
     margin-top: 32px;
     font-size: 14px;
     -unity-text-align: middle-center;
-    color: rgba(248, 250, 252, 0.6);
+    color: #d2b48c;
 }

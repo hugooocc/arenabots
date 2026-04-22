@@ -6,15 +6,17 @@
     xsi:noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd"
 >
     <!-- End Game Screen Layer -->
-    <ui:VisualElement name="end-game-screen" style="width: 100%; height: 100%; justify-content: center; align-items: center; background-color: rgba(0, 0, 0, 0.85); display: none;">
+    <ui:VisualElement name="end-game-screen" style="width: 100%; height: 100%; justify-content: center; align-items: center; background-color: rgba(30, 20, 10, 0.95); display: none;">
         
-        <ui:Label text="GAME OVER" style="font-size: 72px; color: #FF4444; -unity-font-style: bold; margin-bottom: 20px;" />
-        
-        <ui:Label name="final-stats-label" text="Mobs Killed: 0" style="font-size: 36px; color: white; margin-bottom: 40px;" />
+        <ui:VisualElement class="cyber-panel" style="width: 500px; align-items: center; padding: 50px;">
+            <ui:Label text="HAS CAÍDO" style="font-size: 72px; color: #8b0000; -unity-font-style: bold; margin-bottom: 20px; -unity-text-outline-width: 2px; -unity-text-outline-color: #2d1e18;" />
+            
+            <ui:Label name="final-stats-label" text="BOTS ELIMINADOS: 0" class="cyber-label-hud" style="margin-bottom: 40px;" />
 
-        <ui:Button name="btn-restart" text="Restart" style="font-size: 24px; padding: 15px 40px; margin-bottom: 20px; background-color: #4CAF50; color: white; border-radius: 8px;" />
-        
-        <ui:Button name="btn-main-menu" text="Main Menu" style="font-size: 24px; padding: 15px 40px; background-color: #2196F3; color: white; border-radius: 8px;" />
+            <ui:Button name="btn-restart" text="REINTENTAR" class="cyber-button-primary" style="width: 300px; margin-bottom: 20px;" />
+            
+            <ui:Button name="btn-main-menu" text="MENÚ PRINCIPAL" class="cyber-button" style="width: 300px;" />
+        </ui:VisualElement>
 
     </ui:VisualElement>
 </ui:UXML>

@@ -13,9 +13,9 @@
             <ui:VisualElement style="align-items: flex-end;">
                 <ui:Label name="mobs-killed-label" text="MOBS ELIMINADOS: 0" class="cyber-label-hud" style="margin-bottom: 5px; font-size: 24px;" />
                 <ui:VisualElement style="flex-direction: column; align-items: flex-end;">
-                    <ui:Label name="time-played-label" text="00:00" class="cyber-label-hud" style="color: white; -unity-text-outline-color: rgba(255, 255, 255, 0.2);" />
-                    <ui:VisualElement style="height: 1px; background-color: #00f2ff; width: 100%; opacity: 0.3; margin-top: 10px;" />
-                    <ui:VisualElement style="height: 1px; background-color: #00f2ff; width: 60%; opacity: 0.2; margin-top: 3px;" />
+                    <ui:Label name="time-played-label" text="00:00" class="cyber-label-hud" style="color: #f5deb3; -unity-text-outline-color: rgba(92, 64, 51, 0.4);" />
+                    <ui:VisualElement style="height: 2px; background-color: #cd853f; width: 100%; opacity: 0.5; margin-top: 10px;" />
+                    <ui:VisualElement style="height: 2px; background-color: #8b5a2b; width: 60%; opacity: 0.3; margin-top: 3px;" />
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
@@ -25,9 +25,9 @@
             <ui:Label text="ESTADO DEL BOT" class="cyber-label-hud" style="font-size: 14px; margin-bottom: 8px; letter-spacing: 2px;" />
             <ui:ProgressBar name="health-bar" value="100" high-value="100" class="cyber-progress-bar" />
             
-            <!-- Visual decorative glitch lines (Premium Touch) -->
-            <ui:VisualElement style="height: 1px; background-color: #00f2ff; width: 100%; opacity: 0.3; margin-top: 10px;" />
-            <ui:VisualElement style="height: 1px; background-color: #00f2ff; width: 60%; opacity: 0.2; margin-top: 3px;" />
+            <!-- Visual decorative desert lines -->
+            <ui:VisualElement style="height: 2px; background-color: #cd853f; width: 100%; opacity: 0.5; margin-top: 10px;" />
+            <ui:VisualElement style="height: 2px; background-color: #8b5a2b; width: 60%; opacity: 0.3; margin-top: 3px;" />
         </ui:VisualElement>
         
     </ui:VisualElement>
