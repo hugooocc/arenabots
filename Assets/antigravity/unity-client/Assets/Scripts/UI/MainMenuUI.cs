@@ -363,7 +363,7 @@ public class MainMenuUI : MonoBehaviour
 
             if (www.result == UnityWebRequest.Result.Success)
             {
-                UserStatsResponse res = JsonUtility.FromJson<UserStatsResponse>(www.downloadHandler.text);
+                RankingEntry res = JsonUtility.FromJson<RankingEntry>(www.downloadHandler.text);
                 if (mobsLabel != null) mobsLabel.text = $"Récord de Mobs Eliminados: {res.maxMobsKilled}";
                 if (timeLabel != null) {
                     int mins = Mathf.FloorToInt(res.maxTimeSurvived / 60f);
@@ -419,8 +419,16 @@ public class MainMenuUI : MonoBehaviour
                     row.style.backgroundColor = new Color(0, 0, 0, 0.3f);
                     
                     // Highlight first place
-                    if (rank == 1) row.style.borderWidth = 1;
-                    if (rank == 1) row.style.borderColor = Color.yellow;
+                    if (rank == 1) {
+                        row.style.borderTopWidth = 1;
+                        row.style.borderBottomWidth = 1;
+                        row.style.borderLeftWidth = 1;
+                        row.style.borderRightWidth = 1;
+                        row.style.borderTopColor = Color.yellow;
+                        row.style.borderBottomColor = Color.yellow;
+                        row.style.borderLeftColor = Color.yellow;
+                        row.style.borderRightColor = Color.yellow;
+                    }
 
                     Label rankLabel = new Label($"{rank}.");
                     rankLabel.style.width = 30;
