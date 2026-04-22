@@ -3,7 +3,7 @@
 ---
 **Curs:** 2DAM 2025-2026  
 **Projecte:** Arena Bots  
-**Integrant:** Hugo (Grup X)  
+**Integrant:** Hugo 
 **Arquitectura:** Microserveis en Node.js + Client Unity 2D  
 **Vídeo:** [Enllaç al vídeo de Canva](https://canva.com/...)  
 ---

@@ -8,7 +8,7 @@
     <Style src="GlobalStyles.uss" />
     
     <!-- End Game Screen Layer -->
-    <ui:VisualElement name="end-game-screen" style="width: 100%; height: 100%; justify-content: center; align-items: center; background-color: rgba(30, 20, 10, 0.95); display: none;">
+    <ui:VisualElement name="end-game-screen" style="width: 100%; height: 100%; justify-content: center; align-items: center; background-color: rgba(30, 20, 10, 0.95);">
         
         <ui:VisualElement class="cyber-panel" style="width: 500px; align-items: center; padding: 50px;">
             <ui:Label text="HAS CAÍDO" style="font-size: 72px; color: #8b1a1a; -unity-font-style: bold; margin-bottom: 20px; -unity-text-outline-width: 2px; -unity-text-outline-color: #000000; -unity-text-align: middle-center; width: 100%;" />

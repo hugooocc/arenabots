@@ -117,15 +117,23 @@ namespace Antigravity.UI
                 Debug.Log("[InGameUIManager] Quit button linked.");
             }
 
-            // Initial Visibility
-            if (endGameInstance != null) endGameInstance.style.display = DisplayStyle.None;
-            if (pauseInstance != null) pauseInstance.style.display = DisplayStyle.None;
-            if (hudInstance != null) hudInstance.style.display = DisplayStyle.Flex;
+            // Initial Visibility: We only toggle the Instance containers
+            if (endGameInstance != null) {
+                endGameInstance.style.display = DisplayStyle.None;
+                // Pre-set inner layers to Flex so they show up when instance is shown
+                if (endGameLayer != null) endGameLayer.style.display = DisplayStyle.Flex;
+            }
 
-            // Ensure inner elements are also display flex if instances were hidden
-            if (endGameLayer != null) endGameLayer.style.display = DisplayStyle.Flex;
-            if (pauseMenuInner != null) pauseMenuInner.style.display = DisplayStyle.Flex;
-            if (gameHudLayer != null) gameHudLayer.style.display = DisplayStyle.Flex;
+            if (pauseInstance != null) {
+                pauseInstance.style.display = DisplayStyle.None;
+                // Pre-set inner layers to Flex
+                if (pauseMenuInner != null) pauseMenuInner.style.display = DisplayStyle.Flex;
+            }
+
+            if (hudInstance != null) {
+                hudInstance.style.display = DisplayStyle.Flex;
+                if (gameHudLayer != null) gameHudLayer.style.display = DisplayStyle.Flex;
+            }
 
             // Subscribe to Enemy Controller Global Event
             EnemyController.OnEnemyKilled += HandleEnemyKilled;
