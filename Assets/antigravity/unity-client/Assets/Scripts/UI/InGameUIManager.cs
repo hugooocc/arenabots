@@ -182,6 +182,12 @@ namespace Antigravity.UI
                 UpdateTimerDisplay();
             }
 
+            // Escape key toggles pause (works even if button fails)
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                TogglePause();
+            }
+
             // Continuously look for player if not found
             if (targetPlayerHealth == null)
             {
@@ -239,7 +245,8 @@ namespace Antigravity.UI
         {
             isPaused = !isPaused;
             Debug.Log($"[InGameUIManager] TogglePause called. New isPaused: {isPaused}");
-            
+
+            // GUARD: Only freeze the game if the pause UI can actually be shown
             if (pauseInstance != null) {
                 pauseInstance.style.display = isPaused ? DisplayStyle.Flex : DisplayStyle.None;
                 
@@ -251,20 +258,39 @@ namespace Antigravity.UI
                 }
 
                 Debug.Log($"[InGameUIManager] Pause instance display: {pauseInstance.style.display}");
-            } else {
-                Debug.LogError("[InGameUIManager] CRITICAL: pauseInstance is NULL!");
-            }
 
-            // Pausa física solo en single player genuino o sala "singleplayer"
-            bool isRealMultiplayer = Antigravity.Auth.GameSession.CurrentGameId != "singleplayer" &&
-                                     Antigravity.Shooting.NetworkManager.Instance != null && 
-                                     Antigravity.Shooting.NetworkManager.Instance.isActiveAndEnabled;
+                // Pausa física solo en single player genuino o sala "singleplayer"
+                bool isRealMultiplayer = Antigravity.Auth.GameSession.CurrentGameId != "singleplayer" &&
+                                         Antigravity.Shooting.NetworkManager.Instance != null && 
+                                         Antigravity.Shooting.NetworkManager.Instance.isActiveAndEnabled;
 
-            if (!isRealMultiplayer) {
-                Time.timeScale = isPaused ? 0f : 1f;
-                Debug.Log($"[InGameUIManager] Time.timeScale set to: {Time.timeScale}");
+                if (!isRealMultiplayer) {
+                    Time.timeScale = isPaused ? 0f : 1f;
+                    Debug.Log($"[InGameUIManager] Time.timeScale set to: {Time.timeScale}");
+                } else {
+                    Debug.Log("[InGameUIManager] Time.timeScale NOT changed because we are in Multiplayer.");
+                }
             } else {
-                Debug.Log("[InGameUIManager] Time.timeScale NOT changed because we are in Multiplayer.");
+                // SAFETY: Don't freeze the game if the pause menu can't appear
+                isPaused = false;
+                Time.timeScale = 1f;
+                Debug.LogError("[InGameUIManager] CRITICAL: pauseInstance is NULL! Attempting to re-query...");
+                
+                // Try to re-query the element
+                if (uiDocument != null) {
+                    var root = uiDocument.rootVisualElement;
+                    pauseInstance = root.Q<VisualElement>("pause-instance");
+                    pauseMenuInner = root.Q<VisualElement>("pause-menu");
+                    pauseStatsKills = root.Q<Label>("pause-stats-kills");
+                    pauseStatsTime = root.Q<Label>("pause-stats-time");
+                    resumeButton = root.Q<Button>("btn-resume");
+                    quitButton = root.Q<Button>("btn-quit");
+                    
+                    if (resumeButton != null) resumeButton.clicked += TogglePause;
+                    if (quitButton != null) quitButton.clicked += GoToMainMenu;
+                    
+                    Debug.Log($"[InGameUIManager] Re-query result: pauseInstance={pauseInstance != null}, pauseMenu={pauseMenuInner != null}");
+                }
             }
         }
 
