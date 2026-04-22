@@ -34,6 +34,17 @@ class InMemoryUserRepository extends IUserRepository {
         user.stats.timeSurvived += timeSurvived;
         return user.stats;
     }
+
+    async getAllUsersSorted(limit = 10) {
+        return Array.from(this.users.values())
+            .sort((a, b) => (b.stats?.mobsKilled || 0) - (a.stats?.mobsKilled || 0))
+            .slice(0, limit)
+            .map(u => ({
+                username: u.username,
+                maxMobsKilled: u.stats?.mobsKilled || 0,
+                maxTimeSurvived: u.stats?.timeSurvived || 0
+            }));
+    }
 }
 
 module.exports = new InMemoryUserRepository();

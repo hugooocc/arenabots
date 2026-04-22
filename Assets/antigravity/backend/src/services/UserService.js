@@ -113,6 +113,10 @@ class UserService {
             maxTimeSurvived: user.maxTimeSurvived
         };
     }
+
+    async getRanking(limit = 10) {
+        return await userRepository.getAllUsersSorted(limit);
+    }
 }
 
 module.exports = new UserService();

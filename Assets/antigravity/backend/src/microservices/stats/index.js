@@ -34,6 +34,7 @@ const authenticate = (req, res, next) => {
 // User Stats Routes
 app.get('/api/users/me', authenticate, (req, res) => userController.getStats(req, res));
 app.put('/api/users/stats', authenticate, (req, res) => userController.updateStats(req, res));
+app.get('/api/users/ranking', authenticate, (req, res) => userController.getRanking(req, res));
 
 app.listen(PORT, () => {
     console.log(`[Stats Service] Listening on port ${PORT}`);

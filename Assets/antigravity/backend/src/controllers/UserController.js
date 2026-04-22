@@ -72,6 +72,17 @@ class UserController {
             res.status(status).json({ message: error.message });
         }
     }
+
+    async getRanking(req, res) {
+        try {
+            const limit = req.query.limit ? Number(req.query.limit) : 10;
+            const ranking = await userService.getRanking(limit);
+            res.status(200).json(ranking);
+        } catch (error) {
+            const status = error.status || 500;
+            res.status(status).json({ message: error.message });
+        }
+    }
 }
 
 module.exports = new UserController();

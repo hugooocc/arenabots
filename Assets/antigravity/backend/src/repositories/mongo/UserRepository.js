@@ -27,6 +27,13 @@ class UserRepository extends IUserRepository {
             { new: true }
         );
     }
+
+    async getAllUsersSorted(limit = 10) {
+        return await User.find()
+            .sort({ maxMobsKilled: -1 })
+            .limit(limit)
+            .select('username maxMobsKilled maxTimeSurvived');
+    }
 }
 
 module.exports = new UserRepository();

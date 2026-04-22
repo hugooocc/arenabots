@@ -71,6 +71,7 @@ app.post('/api/auth/login', validateLogin, (req, res) => userController.login(re
 // User Stats Routes
 app.get('/api/users/me', authenticate, (req, res) => userController.getStats(req, res));
 app.put('/api/users/stats', authenticate, (req, res) => userController.updateStats(req, res));
+app.get('/api/users/ranking', authenticate, (req, res) => userController.getRanking(req, res));
 
 // Game Routes
 app.post('/api/games', authenticate, (req, res) => gameController.create(req, res));

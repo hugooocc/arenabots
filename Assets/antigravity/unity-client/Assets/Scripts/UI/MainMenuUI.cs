@@ -130,7 +130,8 @@ public class MainMenuUI : MonoBehaviour
             
             var lblMobs = root.Q<Label>("stat-mobs-killed");
             var lblTime = root.Q<Label>("stat-time-survived");
-            StartCoroutine(FetchUserStatsRoutine(lblMobs, lblTime));
+            var scrollView = root.Q<ScrollView>("stats-scroll-view");
+            StartCoroutine(FetchUserStatsRoutine(lblMobs, lblTime, scrollView));
         };
 
         if (btnBackMulti != null) btnBackMulti.clicked += () => {
@@ -342,13 +343,18 @@ public class MainMenuUI : MonoBehaviour
     }
 
     [Serializable]
-    private class UserStatsResponse {
+    private class RankingEntry {
         public string username;
         public int maxMobsKilled;
         public int maxTimeSurvived;
     }
 
-    IEnumerator FetchUserStatsRoutine(Label mobsLabel, Label timeLabel)
+    [Serializable]
+    private class RankingWrapper {
+        public RankingEntry[] ranking;
+    }
+
+    IEnumerator FetchUserStatsRoutine(Label mobsLabel, Label timeLabel, ScrollView rankingScrollView)
     {
         using (UnityWebRequest www = UnityWebRequest.Get(baseUrl + "/users/me"))
         {
@@ -369,6 +375,77 @@ public class MainMenuUI : MonoBehaviour
             {
                 Debug.LogError("Error fetching stats: " + www.error);
                 if (mobsLabel != null) mobsLabel.text = "Error cargando estadísticas...";
+            }
+        }
+
+        // Fetch Global Ranking
+        yield return FetchRankingRoutine(rankingScrollView);
+    }
+
+    IEnumerator FetchRankingRoutine(ScrollView rankingScrollView)
+    {
+        if (rankingScrollView == null) yield break;
+        rankingScrollView.Clear();
+        rankingScrollView.Add(new Label("Cargando ranking global...") { style = { color = Color.white, marginTop = 10, alignSelf = Align.Center } });
+
+        using (UnityWebRequest www = UnityWebRequest.Get(baseUrl + "/users/ranking"))
+        {
+            www.SetRequestHeader("Authorization", "Bearer " + GetUserToken());
+            yield return www.SendWebRequest();
+
+            if (www.result == UnityWebRequest.Result.Success)
+            {
+                rankingScrollView.Clear();
+                string jsonResponse = "{\"ranking\":" + www.downloadHandler.text + "}";
+                RankingWrapper wrapper = JsonUtility.FromJson<RankingWrapper>(jsonResponse);
+
+                if (wrapper.ranking == null || wrapper.ranking.Length == 0)
+                {
+                    rankingScrollView.Add(new Label("Aún no hay datos de combate registrados.") { style = { color = Color.gray, marginTop = 10, alignSelf = Align.Center } });
+                    yield break;
+                }
+
+                int rank = 1;
+                foreach (var entry in wrapper.ranking)
+                {
+                    VisualElement row = new VisualElement();
+                    row.style.flexDirection = FlexDirection.Row;
+                    row.style.justifyContent = Justify.SpaceBetween;
+                    row.style.paddingLeft = 10;
+                    row.style.paddingRight = 10;
+                    row.style.paddingTop = 5;
+                    row.style.paddingBottom = 5;
+                    row.style.marginBottom = 5;
+                    row.style.backgroundColor = new Color(0, 0, 0, 0.3f);
+                    
+                    // Highlight first place
+                    if (rank == 1) row.style.borderWidth = 1;
+                    if (rank == 1) row.style.borderColor = Color.yellow;
+
+                    Label rankLabel = new Label($"{rank}.");
+                    rankLabel.style.width = 30;
+                    rankLabel.style.color = rank == 1 ? Color.yellow : Color.white;
+                    row.Add(rankLabel);
+
+                    Label nameLabel = new Label(entry.username);
+                    nameLabel.style.flexGrow = 1;
+                    nameLabel.style.color = rank == 1 ? Color.yellow : Color.white;
+                    nameLabel.style.marginLeft = 10;
+                    row.Add(nameLabel);
+
+                    Label scoreLabel = new Label($"{entry.maxMobsKilled} Bajas");
+                    scoreLabel.style.color = new Color(0.8f, 0.4f, 0.2f); // Desierto/Óxido
+                    row.Add(scoreLabel);
+
+                    rankingScrollView.Add(row);
+                    rank++;
+                }
+            }
+            else
+            {
+                rankingScrollView.Clear();
+                rankingScrollView.Add(new Label("Error al contactar con el servidor de inteligencia.") { style = { color = Color.red, marginTop = 10, alignSelf = Align.Center } });
+                Debug.LogError("Error fetching ranking: " + www.error);
             }
         }
     }
