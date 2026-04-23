@@ -110,6 +110,13 @@ namespace Antigravity.Player
         }
 
         [System.Serializable]
+        private class ReadyMessage {
+            public string tipo;
+            public string username;
+            public Antigravity.Network.Vector2Payload posicion;
+        }
+
+        [System.Serializable]
         private class InputMessage {
             public string tipo = "movimiento";
             public Vector2 input;
@@ -187,6 +194,20 @@ namespace Antigravity.Player
                 float animSpeed = isMultiplayer ? movement.magnitude * moveSpeed : rb.linearVelocity.magnitude;
                 animator.SetFloat(SpeedHash, animSpeed);
             }
+        }
+
+        public void SetReady()
+        {
+            var nm = Antigravity.Shooting.NetworkManager.Instance;
+            if (nm == null) return;
+
+            var readyMsg = new ReadyMessage();
+            readyMsg.tipo = "player_ready";
+            readyMsg.username = Antigravity.Auth.GameSession.Username;
+            readyMsg.posicion = new Antigravity.Network.Vector2Payload { x = transform.position.x, y = transform.position.y };
+            
+            nm.SendMessage(JsonUtility.ToJson(readyMsg));
+            Debug.Log("[PlayerMovement] Enviado player_ready con posición inicial: " + transform.position);
         }
 
         private float nextNetTickTime = 0f;

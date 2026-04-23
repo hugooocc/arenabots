@@ -124,7 +124,14 @@ wss.on('connection', async (ws, req) => {
                 ws.isReady = true;
                 if (!ws.username && data.username) ws.username = data.username;
                 if (ws.userId && players.has(ws.userId)) {
-                    players.get(ws.userId).username = ws.username;
+                    const session = players.get(ws.userId);
+                    session.username = ws.username;
+                    // Sincronizar posición inicial enviada por el cliente
+                    if (data.posicion) {
+                        session.position.x = data.posicion.x;
+                        session.position.y = data.posicion.y;
+                        console.log(`[WS] Posición inicial para ${ws.username}: (${session.position.x}, ${session.position.y})`);
+                    }
                 }
                 
                 console.log(`[WS] ${ws.username} is READY in game ${ws.gameId}`);

@@ -74,15 +74,17 @@ class WaveManager {
 
         // Obtener jugadores vivos para targets
         const roomPlayers = [];
+        const targetId = String(gameId);
+
         this.wss.clients.forEach(c => {
-            if (c.readyState === 1 && c.gameId === gameId && c.userId && this.players.has(c.userId)) {
+            if (c.readyState === 1 && String(c.gameId) === targetId && c.userId && this.players.has(c.userId)) {
                 const p = this.players.get(c.userId);
                 if (p.isAlive) roomPlayers.push(p);
             }
         });
 
         if (roomPlayers.length === 0) {
-            // Optional: console.log(`[WaveManager] No players alive in ${gameId} to target.`);
+            // console.log(`[WaveManager] Sala ${targetId}: Sin jugadores vivos.`);
             return;
         }
 
