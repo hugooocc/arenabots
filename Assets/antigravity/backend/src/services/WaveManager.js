@@ -81,7 +81,10 @@ class WaveManager {
             }
         });
 
-        if (roomPlayers.length === 0) return;
+        if (roomPlayers.length === 0) {
+            // Optional: console.log(`[WaveManager] No players alive in ${gameId} to target.`);
+            return;
+        }
 
         enemies.forEach((data, id) => {
             // Encontrar jugador más cercano
@@ -97,6 +100,8 @@ class WaveManager {
                 const dx = nearest.position.x - data.x;
                 const dy = nearest.position.y - data.y;
                 const angle = Math.atan2(dy, dx);
+                
+                // Normalizar y aplicar paso (2.0 speed * 0.05 step = 0.1)
                 const vx = Math.cos(angle) * 0.1;
                 const vy = Math.sin(angle) * 0.1;
                 

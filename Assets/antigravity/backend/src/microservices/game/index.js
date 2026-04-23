@@ -99,8 +99,14 @@ wss.on('connection', async (ws, req) => {
                 if (!game) { ws.close(4004, "Game not found"); return; }
                 const isRegistered = game.players.some(p => p.toString() === userId?.toString());
                 if (!isRegistered) { ws.close(4003, "Not registered"); return; }
-                // NOTE: start_countdown is now sent in player_ready handler to avoid
-                // race condition where client hasn't registered listeners yet.
+                const PlayerSession = require('../models/PlayerSession');
+                if (userId) {
+                    // Always create a fresh session for the new game joined
+                    const session = new PlayerSession(userId);
+                    session.username = ws.username || "Jugador";
+                    players.set(userId, session);
+                }
+                
                 console.log(`[WS] Player connected to game ${gameId}. userId: ${userId}`);
             } catch (err) { console.error(err); }
         }
@@ -117,6 +123,9 @@ wss.on('connection', async (ws, req) => {
             if (data.tipo === 'player_ready') {
                 ws.isReady = true;
                 if (!ws.username && data.username) ws.username = data.username;
+                if (ws.userId && players.has(ws.userId)) {
+                    players.get(ws.userId).username = ws.username;
+                }
                 
                 console.log(`[WS] ${ws.username} is READY in game ${ws.gameId}`);
 

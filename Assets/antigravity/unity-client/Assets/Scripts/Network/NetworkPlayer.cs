@@ -31,15 +31,26 @@ namespace Antigravity.Network
             }
         }
 
-        public void UpdateState(Vector2Payload position, Vector2Payload velocity, Vector2Payload looking)
+        public void UpdateState(Vector2Payload position, int seq)
         {
+            Vector3 previousTarget = targetPosition;
             targetPosition = new Vector3(position.x, position.y, 0);
+            
+            // Calculate pseudo-velocity for animations
+            Vector2 delta = (Vector2)targetPosition - (Vector2)previousTarget;
             
             if (animator != null)
             {
-                animator.SetFloat(MoveXHash, looking.x);
-                animator.SetFloat(MoveYHash, looking.y);
-                animator.SetFloat(SpeedHash, new Vector2(velocity.x, velocity.y).magnitude);
+                if (delta.magnitude > 0.01f) {
+                    animator.SetFloat(MoveXHash, delta.x);
+                    animator.SetFloat(MoveYHash, delta.y);
+                }
+                animator.SetFloat(SpeedHash, delta.magnitude * 20f); // 20Hz normalize
+            }
+
+            // Flip sprite based on direction
+            if (Mathf.Abs(delta.x) > 0.01f) {
+                transform.localScale = new Vector3(delta.x > 0 ? 1 : -1, 1, 1);
             }
         }
 

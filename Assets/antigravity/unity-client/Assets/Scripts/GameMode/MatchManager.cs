@@ -310,6 +310,8 @@ namespace Antigravity.GameMode
             nm.SendMessage(msg);
         }
 
+        private System.Collections.Generic.Dictionary<string, Antigravity.Network.NetworkPlayer> remotesByUserId = new System.Collections.Generic.Dictionary<string, Antigravity.Network.NetworkPlayer>();
+
         private void HandleNetworkMessage(string rawMessage)
         {
             try {
@@ -319,6 +321,16 @@ namespace Antigravity.GameMode
                     var tickData = JsonUtility.FromJson<ServerTickData>(rawMessage);
                     Antigravity.UI.InGameUIManager ui = Object.FindFirstObjectByType<Antigravity.UI.InGameUIManager>();
                     if (ui != null) ui.SyncServerTime(tickData.time);
+                }
+                else if (rawMessage.Contains("\"tipo\":\"player_update\""))
+                {
+                    var data = JsonUtility.FromJson<PlayerUpdatePayload>(rawMessage);
+                    
+                    // Si es el local, ya lo gestiona PlayerMovement.cs para reconciliación
+                    // Si es un remoto, lo actualizamos aquí
+                    if (data.userId != Antigravity.Auth.GameSession.UserId) {
+                        UpdateRemotePlayer(data);
+                    }
                 }
                 else if (rawMessage.Contains("\"tipo\":\"jugador_muerto\""))
                 {
@@ -339,6 +351,31 @@ namespace Antigravity.GameMode
             } catch (System.Exception e) {
                 Debug.LogError("[MatchManager] Error parsing message: " + e.Message);
             }
+        }
+
+        private void UpdateRemotePlayer(PlayerUpdatePayload data) {
+            if (!remotesByUserId.TryGetValue(data.userId, out var np)) {
+                // Si no existe, buscamos todos los remotos en escena por si acaso
+                var allRemotes = FindObjectsByType<Antigravity.Network.NetworkPlayer>(FindObjectsSortMode.None);
+                foreach(var r in allRemotes) {
+                    if (r.userId == data.userId) {
+                        remotesByUserId[data.userId] = r;
+                        np = r;
+                        break;
+                    }
+                }
+            }
+            
+            if (np != null) {
+                np.UpdateState(data.pos, data.seq);
+            }
+        }
+
+        [System.Serializable]
+        private class PlayerUpdatePayload {
+            public string userId;
+            public Antigravity.Network.Vector2Payload pos;
+            public int seq;
         }
 
         [System.Serializable]
