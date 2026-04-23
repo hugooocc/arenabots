@@ -204,7 +204,7 @@ namespace Antigravity.Player
             var readyMsg = new ReadyMessage();
             readyMsg.tipo = "player_ready";
             readyMsg.username = Antigravity.Auth.GameSession.Username;
-            readyMsg.posicion = new Antigravity.Network.Vector2Payload { x = transform.position.x, y = transform.position.y };
+            readyMsg.posicion = new Antigravity.Network.Vector2Payload(transform.position);
             
             nm.SendMessage(JsonUtility.ToJson(readyMsg));
             Debug.Log("[PlayerMovement] Enviado player_ready con posición inicial: " + transform.position);
