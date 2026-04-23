@@ -20,10 +20,6 @@ namespace Antigravity.GameMode
         private CameraState currentViewState = CameraState.FOLLOW;
         private Transform cameraFollowTarget;
 
-        private void Update()
-        {
-            UpdateCameraLogic();
-        }
 
         private void UpdateCameraLogic()
         {
@@ -111,6 +107,9 @@ namespace Antigravity.GameMode
 
     private void Update()
     {
+        // Camera logic
+        UpdateCameraLogic();
+
         // Periodic check to log state to console
         if (Time.frameCount % 300 == 0 && Antigravity.Auth.GameSession.CurrentGameId != "singleplayer") {
             var localPlayers = FindObjectsByType<Antigravity.Player.PlayerMovement>(FindObjectsSortMode.None);
