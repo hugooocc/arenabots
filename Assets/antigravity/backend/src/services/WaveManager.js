@@ -5,18 +5,24 @@ class WaveManager {
     constructor(wss, playersMap) {
         this.wss = wss;
         this.players = playersMap;
-        this.activeGames = new Map(); // gameId -> { spawner, targetSync }
+        this.activeGames = new Map(); // gameId -> { intervals, serverTick, startTime }
     }
 
     startGame(gameId) {
         if (this.activeGames.has(gameId)) return;
 
-        let waveCount = 1;
-        console.log(`[WaveManager] Empezando Hordas y Sincronización en sala ${gameId}`);
+        console.log(`[WaveManager] Iniciando partida autoritativa en sala ${gameId}`);
         
-        // 1. Spawner: Crea enemigos periódicamente
+        const gameData = {
+            serverTick: 0,
+            startTime: Date.now(),
+            waveCount: 1,
+            intervals: []
+        };
+
+        // 1. Spawner de Enemigos (cada 5s)
         const spawner = setInterval(() => {
-            const numEnemies = Math.min(1 + Math.floor(waveCount / 3), 5);
+            const numEnemies = Math.min(1 + Math.floor(gameData.waveCount / 3), 5);
             for(let i=0; i<numEnemies; i++) {
                 const enemyId = uuidv4();
                 const side = Math.floor(Math.random() * 4);
@@ -26,62 +32,82 @@ class WaveManager {
                 else if (side === 2) { spawnX = (Math.random() * 12) - 6; spawnY = -6; }
                 else if (side === 3) { spawnX = -6; spawnY = (Math.random() * 12) - 6; }
                 
-                EnemyAI.registerEnemy(gameId, enemyId, 100);
-                const payload = JSON.stringify({
+                EnemyAI.registerEnemy(gameId, enemyId, 100, spawnX, spawnY);
+                this.broadcastToRoom(gameId, JSON.stringify({
                     tipo: 'spawn_enemy',
                     enemigoId: enemyId,
                     x: spawnX,
                     y: spawnY,
                     hp: 100
-                });
-                this.broadcastToRoom(gameId, payload);
+                }));
             }
-            waveCount++;
+            gameData.waveCount++;
         }, 5000);
 
-        // 2. TargetSync: Sincroniza a quién ataca cada enemigo (Autoridad del Servidor)
-        const targetSync = setInterval(() => {
-            const enemies = EnemyAI.rooms.get(gameId);
-            if (!enemies || enemies.size === 0) return;
+        // 2. Tick Loop Principal (20Hz - Sincronización de Estado e IA)
+        const tickLoop = setInterval(() => {
+            gameData.serverTick++;
+            const currentTime = (Date.now() - gameData.startTime) / 1000;
 
-            // Obtener jugadores vivos en esta sala
-            const roomPlayers = [];
-            this.wss.clients.forEach(c => {
-                if (c.readyState === 1 && c.gameId === gameId && c.userId && this.players && this.players.has(c.userId)) {
-                    const session = this.players.get(c.userId);
-                    if (session.isAlive) roomPlayers.push(session);
-                }
-            });
+            // Simple IA: Mover enemigos hacia el jugador más cercano
+            this.updateEnemiesAI(gameId);
 
-            if (roomPlayers.length === 0) return;
-
-            // Para cada enemigo, buscar el jugador más cercano
-            const syncData = [];
-            enemies.forEach((data, enemyId) => {
-                // Posición del enemigo (asumimos que los clientes la tienen, el servidor solo manda el target)
-                // Nota: Para un MVP, el servidor no simula el movimiento, solo dicta el objetivo.
-                // En una versión más pro, el servidor rastrearía la posición del enemigo.
-                // Por ahora, simplemente mandamos el ID del jugador que CADA enemigo debe seguir.
-                
-                // Selección simple: repartir enemigos o simplemente el más cercano al spawn/última posición conocida.
-                // Usaremos una asignación persistente o simplemente el más cercano al azar para este paso.
-                const target = roomPlayers[Math.floor(Math.random() * roomPlayers.length)];
-                syncData.push({ id: enemyId, targetId: target.playerId });
-            });
-
+            // Broadcast de Estado (Sync Time + Enemies)
+            const snapshot = EnemyAI.getRoomSnapshot(gameId);
             const payload = JSON.stringify({
-                tipo: 'sync_enemy_targets',
-                targets: syncData
+                tipo: 'game_tick',
+                tick: gameData.serverTick,
+                time: currentTime,
+                enemies: snapshot
             });
+            
             this.broadcastToRoom(gameId, payload);
-        }, 1000);
+        }, 50);
 
-        this.activeGames.set(gameId, { spawner, targetSync });
+        gameData.intervals.push(spawner, tickLoop);
+        this.activeGames.set(gameId, gameData);
+    }
+
+    updateEnemiesAI(gameId) {
+        const enemies = EnemyAI.rooms.get(gameId);
+        if (!enemies || enemies.size === 0) return;
+
+        // Obtener jugadores vivos para targets
+        const roomPlayers = [];
+        this.wss.clients.forEach(c => {
+            if (c.readyState === 1 && c.gameId === gameId && c.userId && this.players.has(c.userId)) {
+                const p = this.players.get(c.userId);
+                if (p.isAlive) roomPlayers.push(p);
+            }
+        });
+
+        if (roomPlayers.length === 0) return;
+
+        enemies.forEach((data, id) => {
+            // Encontrar jugador más cercano
+            let nearest = null;
+            let minDist = 999;
+            roomPlayers.forEach(p => {
+                const d = Math.sqrt(Math.pow(p.position.x - data.x, 2) + Math.pow(p.position.y - data.y, 2));
+                if (d < minDist) { minDist = d; nearest = p; }
+            });
+
+            if (nearest) {
+                // Mover hacia el jugador (Velocidad simple constante 2 unidades/seg -> 0.1 por tick)
+                const dx = nearest.position.x - data.x;
+                const dy = nearest.position.y - data.y;
+                const angle = Math.atan2(dy, dx);
+                const vx = Math.cos(angle) * 0.1;
+                const vy = Math.sin(angle) * 0.1;
+                
+                EnemyAI.updateEnemyPosition(gameId, id, data.x + vx, data.y + vy);
+            }
+        });
     }
 
     broadcastToRoom(gameId, payload) {
         this.wss.clients.forEach((client) => {
-            if (client.readyState === 1 && client.gameId === gameId) {
+            if (client.readyState === 1 && String(client.gameId) === String(gameId)) {
                 client.send(payload);
             }
         });
@@ -90,11 +116,10 @@ class WaveManager {
     stopGame(gameId) {
         if (this.activeGames.has(gameId)) {
             const game = this.activeGames.get(gameId);
-            clearInterval(game.spawner);
-            clearInterval(game.targetSync);
+            game.intervals.forEach(clearInterval);
             this.activeGames.delete(gameId);
             EnemyAI.clearRoom(gameId);
-            console.log(`[WaveManager] Partida ${gameId} terminada y loops limpiados.`);
+            console.log(`[WaveManager] Partida ${gameId} terminada.`);
         }
     }
 }

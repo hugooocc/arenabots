@@ -174,9 +174,21 @@ namespace Antigravity.UI
             if (mainMenuButton != null) mainMenuButton.clicked -= GoToMainMenu;
         }
 
+        public void SyncServerTime(float serverTime)
+        {
+            // PRO ARCHITECTURE: The server dictates the time.
+            // In a real high-end system, we'd interpolate this with local time for smoothness
+            // between 50ms ticks, but for now we just apply the snap for the HUD.
+            timePlayed = serverTime;
+            UpdateTimerDisplay();
+        }
+
         private void Update()
         {
-            if (isGameActive)
+            // Only auto-increment timer in SinglePlayer
+            bool isMultiplayer = Antigravity.Auth.GameSession.CurrentGameId != "singleplayer";
+            
+            if (isGameActive && !isMultiplayer)
             {
                 timePlayed += Time.deltaTime;
                 UpdateTimerDisplay();

@@ -120,7 +120,7 @@ wss.on('connection', async (ws, req) => {
                 
                 console.log(`[WS] ${ws.username} is READY in game ${ws.gameId}`);
 
-                // Send lists to keep players synced
+                // 1. Sincronizar jugadores existentes
                 const existingPlayers = [];
                 wss.clients.forEach(c => {
                     if (c !== ws && String(c.gameId) === String(ws.gameId) && c.isReady) {
@@ -135,8 +135,18 @@ wss.on('connection', async (ws, req) => {
                     }
                 });
 
+                // 2. Si la partida YA EMPEZÓ, enviar FULL_STATE al nuevo (Reconexión / Entrada Tardía)
+                if (waveManager.activeGames.has(ws.gameId)) {
+                    const roomSnapshot = EnemyAI.getRoomSnapshot(ws.gameId);
+                    ws.send(JSON.stringify({
+                        tipo: 'full_state',
+                        enemies: roomSnapshot,
+                        tick: waveManager.activeGames.get(ws.gameId).serverTick
+                    }));
+                }
+
                 // Trigger countdown logic
-                if (ws.gameId && ws.gameId !== 'singleplayer') {
+                if (ws.gameId && ws.gameId !== 'singleplayer' && !waveManager.activeGames.has(ws.gameId)) {
                     const game = await Game.findById(ws.gameId);
                     if (game) {
                         let readyCount = 0;
@@ -149,22 +159,19 @@ wss.on('connection', async (ws, req) => {
                         });
                         
                         const joinedCount = game.players.length;
-                        console.log(`[WS STATUS] Game: ${ws.gameId} | Ready: ${readyCount} | Joined: ${joinedCount} | Clients:`, connectedClients);
-                        
                         if (readyCount >= joinedCount && joinedCount >= 2) {
-                            console.log(`[WS START] Triggering countdown for game ${ws.gameId}`);
                             wss.clients.forEach(c => { 
                                 if (String(c.gameId) === String(ws.gameId)) c.send(JSON.stringify({ tipo: 'start_countdown' })); 
                             });
-                        } else {
-                            console.log(`[WS WAIT] Still waiting. Need ${joinedCount} ready, have ${readyCount}.`);
                         }
-                    } else {
-                        console.error(`[WS ERROR] Game ${ws.gameId} not found in DB during ready check`);
                     }
                 }
             } else if (data.tipo === 'disparo') handleShoot(ws, data, wss);
             else if (data.tipo === 'impacto_proyectil') handleImpact(ws, data, wss);
+            else if (data.tipo === 'player_dead') {
+                const { handleDeath } = require('../../websocket/shootHandler');
+                handleDeath(ws, data, wss, waveManager);
+            }
             else if (data.tipo === 'movimiento') {
                 if (ws.userId && players.has(ws.userId)) {
                     players.get(ws.userId).position = data.posicion;

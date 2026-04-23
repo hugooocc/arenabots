@@ -24,9 +24,15 @@ namespace Antigravity.Enemies
         private Transform targetPlayer;
         private Rigidbody2D rb;
 
+        // --- NETWORK SYNC ---
+        private Vector2 targetPosition;
+        private int lastSequence = -1;
+        private bool hasFirstState = false;
+
         private void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
+            targetPosition = transform.position;
             
             // Físicas: Rigidbody2D (Dynamic, Gravity: 0, Sleeping Mode: Start Awake)
             rb.bodyType = RigidbodyType2D.Dynamic;
@@ -44,7 +50,37 @@ namespace Antigravity.Enemies
         {
             EnemyId = id;
             Health = initialHealth;
+            targetPosition = transform.position;
             FindPlayer();
+        }
+
+        public void UpdateNetworkState(float x, float y, int hp, int seq)
+        {
+            if (seq <= lastSequence) return; // Discard old packets (Out of order prevention)
+            
+            lastSequence = seq;
+            targetPosition = new Vector2(x, y);
+            Health = hp;
+
+            if (!hasFirstState) {
+                transform.position = targetPosition;
+                hasFirstState = true;
+            }
+        }
+
+        private void Update()
+        {
+            bool isMultiplayer = Antigravity.Auth.GameSession.CurrentGameId != "singleplayer";
+            if (isMultiplayer && hasFirstState && !isDead)
+            {
+                // Smooth movement towards server position (Interpolation)
+                transform.position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * 10f);
+                
+                // Flip sprite based on movement direction
+                float dx = targetPosition.x - transform.position.x;
+                if (Mathf.Abs(dx) > 0.01f)
+                    transform.localScale = new Vector3(dx > 0 ? 1 : -1, 1, 1);
+            }
         }
 
         private void FindPlayer()
@@ -86,17 +122,16 @@ namespace Antigravity.Enemies
 
         private void FixedUpdate()
         {
-            // En multijugador, esperamos a que el servidor nos diga a quién atacar.
-            // Solo buscamos localmente si es singleplayer o si el servidor aún no ha mandado targets.
             bool isMultiplayer = Antigravity.Auth.GameSession.CurrentGameId != "singleplayer";
-            
-            if (!isMultiplayer)
+            if (isMultiplayer) {
+                if (rb != null) rb.linearVelocity = Vector2.zero; // Físicas desactivadas en multi (autoridad servidor)
+                return;
+            }
+
+            // --- Lógica SinglePlayer ---
+            if (targetPlayer == null || (targetPlayer.TryGetComponent<Antigravity.Player.PlayerHealth>(out var hp) && hp.currentHealth <= 0)) 
             {
-                // Si no tenemos target o el que tenemos ha muerto, buscamos otro
-                if (targetPlayer == null || (targetPlayer.TryGetComponent<Antigravity.Player.PlayerHealth>(out var hp) && hp.currentHealth <= 0)) 
-                {
-                    FindPlayer();
-                }
+                FindPlayer();
             }
 
             if (targetPlayer == null)

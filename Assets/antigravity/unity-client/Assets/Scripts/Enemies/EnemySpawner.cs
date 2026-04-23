@@ -71,7 +71,17 @@ namespace Antigravity.Enemies
         private void HandleWebSocketMessage(string messageJson)
         {
             // Simple type parsing
-            if (messageJson.Contains("\"tipo\":\"spawn_enemy\""))
+            if (messageJson.Contains("\"tipo\":\"game_tick\""))
+            {
+                var data = JsonUtility.FromJson<BackendGameTickData>(messageJson);
+                UpdateEnemiesFromTick(data.enemies);
+            }
+            else if (messageJson.Contains("\"tipo\":\"full_state\""))
+            {
+                var data = JsonUtility.FromJson<BackendGameTickData>(messageJson);
+                ReconstructFullState(data.enemies);
+            }
+            else if (messageJson.Contains("\"tipo\":\"spawn_enemy\""))
             {
                 var data = JsonUtility.FromJson<BackendEnemySpawnData>(messageJson);
                 SpawnEnemy(data);
@@ -86,6 +96,56 @@ namespace Antigravity.Enemies
                 var data = JsonUtility.FromJson<SyncEnemyTargetsData>(messageJson);
                 UpdateEnemyTargets(data.targets);
             }
+        }
+
+        private void ReconstructFullState(BackendEnemySnapshot[] snapshot)
+        {
+            Debug.Log($"[EnemySpawner] Reconstruyendo estado completo con {snapshot.Length} enemigos.");
+            // Destruir lo que no esté en el snapshot (opcional para limpieza profunda)
+            HashSet<string> snapshotIds = new HashSet<string>();
+            foreach (var s in snapshot) snapshotIds.Add(s.id);
+
+            List<string> toRemove = new List<string>();
+            foreach (var id in activeEnemies.Keys) {
+                if (!snapshotIds.Contains(id)) toRemove.Add(id);
+            }
+            foreach (var id in toRemove) KillEnemy(id);
+
+            // Crear o actualizar existentes
+            foreach (var s in snapshot) {
+                if (!activeEnemies.ContainsKey(s.id)) {
+                    SpawnEnemy(new BackendEnemySpawnData { enemigoId = s.id, x = s.x, y = s.y, hp = s.hp });
+                }
+                activeEnemies[s.id].UpdateNetworkState(s.x, s.y, s.hp, s.seq);
+            }
+        }
+
+        private void UpdateEnemiesFromTick(BackendEnemySnapshot[] snapshot)
+        {
+            foreach (var s in snapshot)
+            {
+                if (activeEnemies.TryGetValue(s.id, out EnemyController enemy))
+                {
+                    enemy.UpdateNetworkState(s.x, s.y, s.hp, s.seq);
+                }
+            }
+        }
+
+        [Serializable]
+        public class BackendEnemySnapshot {
+            public string id;
+            public float x;
+            public float y;
+            public int hp;
+            public int seq;
+        }
+
+        [Serializable]
+        public class BackendGameTickData {
+            public string tipo;
+            public int tick;
+            public float time;
+            public BackendEnemySnapshot[] enemies;
         }
 
         private void UpdateEnemyTargets(EnemyTargetData[] targets)

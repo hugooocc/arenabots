@@ -38,6 +38,75 @@ namespace Antigravity.Player
         private float lastShootTime = -999f;
         public float lookOverrideDuration = 0.5f;
 
+        // --- PREDICTION & RECONCILIATION ---
+        private struct PredictionState {
+            public int seq;
+            public Vector2 input;
+            public Vector2 pos;
+        }
+        private System.Collections.Generic.List<PredictionState> pendingStates = new System.Collections.Generic.List<PredictionState>();
+        private int currentSeq = 0;
+        private float reconciliationThreshold = 0.1f;
+
+        private void Start()
+        {
+            if (Antigravity.Shooting.NetworkManager.Instance != null) {
+                Antigravity.Shooting.NetworkManager.Instance.OnMessageReceived += HandleNetworkUpdate;
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (Antigravity.Shooting.NetworkManager.Instance != null) {
+                Antigravity.Shooting.NetworkManager.Instance.OnMessageReceived -= HandleNetworkUpdate;
+            }
+        }
+
+        private void HandleNetworkUpdate(string msg) {
+            if (!msg.Contains("\"tipo\":\"player_update\"")) return;
+            
+            var data = JsonUtility.FromJson<PlayerUpdateData>(msg);
+            if (data.userId == Antigravity.Auth.GameSession.UserId) {
+                Reconciliate(data.pos, data.seq);
+            }
+        }
+
+        private void Reconciliate(Vector2Payload serverPosPayload, int seq) {
+            Vector2 serverPos = new Vector2(serverPosPayload.x, serverPosPayload.y);
+            
+            // 1. Remove states older than or equal to seq
+            pendingStates.RemoveAll(s => s.seq <= seq);
+
+            // 2. Check discrepancy with last processed sequence
+            // For simplicity in this MVP, we assume the last predicted state matches the sequence
+            // but we'll compare current position with server position after re-applying pending
+            float dist = Vector2.Distance(rb.position, serverPos);
+            if (dist > reconciliationThreshold) {
+                Debug.Log($"[Reconciliation] Correcting player: Dist {dist}. Seq {seq}");
+                rb.position = serverPos;
+
+                // 3. Re-simulate pending inputs
+                foreach (var state in pendingStates) {
+                    rb.position += state.input.normalized * moveSpeed * 0.05f; // Constant server-step
+                }
+            }
+        }
+
+        [System.Serializable]
+        private class PlayerUpdateData {
+            public string tipo;
+            public string userId;
+            public Vector2Payload pos;
+            public int seq;
+        }
+
+        [System.Serializable]
+        private class InputMessage {
+            public string tipo = "movimiento";
+            public Vector2 input;
+            public int seq;
+        }
+
         public void NotifyShoot(Vector2 direction)
         {
             lastShootTime = Time.time;
@@ -57,8 +126,7 @@ namespace Antigravity.Player
             }
 
             Vector2 movement = Vector2.zero;
-
-            // 1. New Input System (Moderno)
+            // Get inputs
             if (Keyboard.current != null)
             {
                 if (Keyboard.current.wKey.isPressed) movement.y += 1f;
@@ -67,50 +135,42 @@ namespace Antigravity.Player
                 if (Keyboard.current.dKey.isPressed) movement.x += 1f;
             }
             
-            // 2. Fallback: Input Manager (Clásico - por si el nuevo falla en su configuración)
             if (movement == Vector2.zero)
             {
                 movement.x = Input.GetAxisRaw("Horizontal");
                 movement.y = Input.GetAxisRaw("Vertical");
             }
 
-            if (movement != Vector2.zero)
-            {
-                Debug.Log($"[PlayerMovement] Detectado Intento de Movimiento: {movement}");
+            bool isMultiplayer = Antigravity.Auth.GameSession.CurrentGameId != "singleplayer";
+
+            if (isMultiplayer) {
+                // prediction
+                currentSeq++;
+                Vector2 velocity = movement.normalized * moveSpeed;
+                rb.position += velocity * Time.fixedDeltaTime; 
+
+                // Store for reconciliation
+                pendingStates.Add(new PredictionState { seq = currentSeq, input = movement, pos = rb.position });
+
+                // Send to server
+                if (Antigravity.Shooting.NetworkManager.Instance != null && Antigravity.Shooting.NetworkManager.Instance.IsConnected) {
+                    var msg = new InputMessage { input = movement, seq = currentSeq };
+                    Antigravity.Shooting.NetworkManager.Instance.SendMessage(JsonUtility.ToJson(msg));
+                }
+            } else {
+                // Standard Authoritative Movement (Local)
+                rb.linearVelocity = movement.normalized * moveSpeed;
             }
 
-            // Normalizamos para no ir más rápido en diagonal y aplicamos velocidad
-            Vector2 velocity = movement.normalized * moveSpeed;
-            rb.linearVelocity = velocity;
-
-            // ANIMACIÓN: Sincronización con el Animator (Blend Tree de 8 direcciones)
+            // ANIMACIÓN
             if (animator != null)
             {
-                // Solo actualizamos la dirección si no hemos disparado recientemente
-                // Esto permite el strafing (caminar de espaldas/lado mientras se dispara)
-                if (Time.time > lastShootTime + lookOverrideDuration)
+                if (Time.time > lastShootTime + lookOverrideDuration && movement != Vector2.zero)
                 {
-                    if (movement != Vector2.zero)
-                    {
-                        animator.SetFloat(MoveXHash, movement.x);
-                        animator.SetFloat(MoveYHash, movement.y);
-                    }
+                    animator.SetFloat(MoveXHash, movement.x);
+                    animator.SetFloat(MoveYHash, movement.y);
                 }
-                
-                animator.SetFloat(SpeedHash, velocity.magnitude);
-            }
-            
-            // LOG DE DIAGNÓSTICO AVANZADO PARA DEDUCIR LA ILUSIÓN
-            if (movement != Vector2.zero) 
-            {
-                Camera cam = Camera.main;
-                GameObject floor = GameObject.Find("ArenaFloor") ?? UnityEngine.Object.FindAnyObjectByType<Antigravity.Environment.FloorSetup>()?.gameObject;
-                
-                string camPos = cam != null ? cam.transform.position.ToString() : "N/A";
-                string floorPos = floor != null ? floor.transform.position.ToString() : "N/A";
-                string floorParent = (floor != null && floor.transform.parent != null) ? floor.transform.parent.name : "None";
-
-                Debug.Log($"[Player] Pos: {transform.position} | [Camera] Pos: {camPos} | [Floor] Pos: {floorPos} (Parent: {floorParent})");
+                animator.SetFloat(SpeedHash, rb.linearVelocity.magnitude);
             }
         }
     }

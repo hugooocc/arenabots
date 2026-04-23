@@ -16,6 +16,61 @@ namespace Antigravity.GameMode
         // Stored so we can unsubscribe it later
         private System.Action onNetworkConnectedHandler;
 
+        public enum CameraState { FOLLOW, SPECTATE, OVERVIEW }
+        private CameraState currentViewState = CameraState.FOLLOW;
+        private Transform cameraFollowTarget;
+
+        private void Update()
+        {
+            UpdateCameraLogic();
+        }
+
+        private void UpdateCameraLogic()
+        {
+            if (Camera.main == null) return;
+            // Support for both Cinemachine and standard camera
+            var cinemachine = Camera.main.GetComponent<Cinemachine.CinemachineVirtualCamera>();
+            
+            switch (currentViewState)
+            {
+                case CameraState.FOLLOW:
+                    // Local player usually handled by cinemachine "Follow" target already set
+                    break;
+
+                case CameraState.SPECTATE:
+                    if (cameraFollowTarget == null) FindNewSpectatorTarget();
+                    if (cinemachine != null) cinemachine.Follow = cameraFollowTarget;
+                    break;
+
+                case CameraState.OVERVIEW:
+                    if (cinemachine != null) cinemachine.Follow = null;
+                    Camera.main.transform.position = Vector3.Lerp(Camera.main.transform.position, new Vector3(0, 0, -10), Time.deltaTime);
+                    break;
+            }
+        }
+
+        private void FindNewSpectatorTarget()
+        {
+            var players = Object.FindObjectsByType<Antigravity.Player.PlayerHealth>(FindObjectsSortMode.None);
+            foreach (var p in players)
+            {
+                if (p.currentHealth > 0)
+                {
+                    cameraFollowTarget = p.transform;
+                    Debug.Log($"[Spectator] Siguiendo ahora a {p.gameObject.name}");
+                    return;
+                }
+            }
+            // No one alive? Go to Overview
+            currentViewState = CameraState.OVERVIEW;
+        }
+
+        public void SetCameraState(CameraState state, Transform target = null)
+        {
+            currentViewState = state;
+            cameraFollowTarget = target;
+        }
+
         private void OnGUI()
         {
             // Persistent debug overlay using legacy GUI for guaranteed visibility
@@ -112,6 +167,9 @@ namespace Antigravity.GameMode
 
         private void Start()
         {
+            // PRO-TIP: Keep WebSocket alive even if window loses focus
+            Application.runInBackground = true;
+
             // CAPTURE ERRORS FOR DIAGNOSIS
             Application.logMessageReceived += (condition, stackTrace, type) => {
                 if (type == LogType.Error || type == LogType.Exception) {
@@ -257,18 +315,39 @@ namespace Antigravity.GameMode
         private void HandleNetworkMessage(string rawMessage)
         {
             try {
-                Antigravity.Shooting.WSMessage msg = JsonUtility.FromJson<Antigravity.Shooting.WSMessage>(rawMessage);
-                if (msg.tipo == "start_countdown")
+                if (rawMessage.Contains("\"tipo\":\"game_tick\""))
+                {
+                    // Update global time from server for HUD interpolation
+                    var tickData = JsonUtility.FromJson<ServerTickData>(rawMessage);
+                    Antigravity.UI.InGameUIManager ui = Object.FindFirstObjectByType<Antigravity.UI.InGameUIManager>();
+                    if (ui != null) ui.SyncServerTime(tickData.time);
+                }
+                else if (rawMessage.Contains("\"tipo\":\"jugador_muerto\""))
+                {
+                    var msg = JsonUtility.FromJson<Antigravity.Shooting.MoveMessage>(rawMessage);
+                    if (msg.userId == Antigravity.Auth.GameSession.UserId) {
+                        Debug.Log("[MatchManager] He muerto. Pasando a Modo Espectador.");
+                        SetCameraState(CameraState.SPECTATE);
+                    }
+                }
+                else if (rawMessage.Contains("\"tipo\":\"game_over\""))
+                {
+                    SetCameraState(CameraState.OVERVIEW);
+                }
+                else if (rawMessage.Contains("\"tipo\":\"start_countdown\""))
                 {
                     StartCoroutine(StartMatchCountdown());
-                }
-                else if (msg.tipo == "jugador_muerto")
-                {
-                    Debug.Log($"[MatchManager] Notificación de muerte recibida para un aliado.");
                 }
             } catch (System.Exception e) {
                 Debug.LogError("[MatchManager] Error parsing message: " + e.Message);
             }
+        }
+
+        [System.Serializable]
+        private class ServerTickData {
+            public string tipo;
+            public int tick;
+            public float time;
         }
 
         IEnumerator StartMatchCountdown()

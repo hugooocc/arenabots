@@ -117,7 +117,7 @@ function handleImpact(ws, data, wss) {
     }
 }
 
-function handleDeath(ws, data, wss) {
+function handleDeath(ws, data, wss, waveManager) {
     const { tipo, partidaId } = data;
     if (tipo !== 'player_dead') return;
 
@@ -133,26 +133,29 @@ function handleDeath(ws, data, wss) {
     // Informar a los demás
     const deathPayload = JSON.stringify({ tipo: 'jugador_muerto', userId });
     wss.clients.forEach(c => {
-        if (c.readyState === WebSocket.OPEN && c.gameId === partidaId) {
+        if (c.readyState === WebSocket.OPEN && String(c.gameId) === String(partidaId)) {
             c.send(deathPayload);
         }
     });
 
     // Comprobar si todos han muerto
-    const roomPlayers = [];
+    const roomSessions = [];
     wss.clients.forEach(c => {
-        if (c.gameId === partidaId && c.userId && players.has(c.userId)) {
-            roomPlayers.push(players.get(c.userId));
+        if (String(c.gameId) === String(partidaId) && c.userId && players.has(c.userId)) {
+            roomSessions.push(players.get(c.userId));
         }
     });
 
-    const anyAlive = roomPlayers.some(p => p.isAlive);
-    console.log(`[WS] ${partidaId}: ${roomPlayers.filter(p=>p.isAlive).length} vivos / ${roomPlayers.length} totales`);
+    const anyAlive = roomSessions.some(p => p.isAlive);
+    
+    if (!anyAlive && roomSessions.length > 0) {
+        // PROTECCIÓN: Solo enviar Game Over una vez
+        if (session.gameOverTriggered) return;
+        roomSessions.forEach(s => s.gameOverTriggered = true);
 
-    if (!anyAlive && roomPlayers.length > 0) {
         console.log(`[WS] ¡TODOS MUERTOS en ${partidaId}! Enviando estadísticas finales.`);
         
-        const roomStats = roomPlayers.map(p => ({
+        const roomStats = roomSessions.map(p => ({
             userId: p.playerId,
             username: p.username || "Jugador",
             kills: p.kills,
@@ -165,16 +168,15 @@ function handleDeath(ws, data, wss) {
         });
 
         wss.clients.forEach(c => {
-            if (c.gameId === partidaId && c.readyState === WebSocket.OPEN) {
+            if (String(c.gameId) === String(partidaId) && c.readyState === WebSocket.OPEN) {
                 c.send(gameOverPayload);
             }
         });
 
-        // Cleanup room immediately
+        // Detener lógica de hordas y marcar en DB
+        if (waveManager) waveManager.stopGame(partidaId);
+        
         const gameService = require('../services/GameService');
-        const WaveManager = require('../services/WaveManager');
-        // We need a reference to waveManager if possible, but index.js handles it.
-        // For now, at least mark as FINISHED in DB
         gameService.finishGame(partidaId).catch(err => console.error(err));
     }
 }
