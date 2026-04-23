@@ -74,7 +74,7 @@ namespace Antigravity.Enemies
             if (isMultiplayer && hasFirstState && !isDead)
             {
                 // Smooth movement towards server position (Interpolation)
-                transform.position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * 10f);
+                transform.position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * 18f);
                 
                 // Flip sprite based on movement direction
                 float dx = targetPosition.x - transform.position.x;

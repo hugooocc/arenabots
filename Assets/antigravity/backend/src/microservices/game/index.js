@@ -174,10 +174,40 @@ wss.on('connection', async (ws, req) => {
             }
             else if (data.tipo === 'movimiento') {
                 if (ws.userId && players.has(ws.userId)) {
-                    players.get(ws.userId).position = data.posicion;
+                    const p = players.get(ws.userId);
+                    const input = data.input || { x: 0, y: 0 };
+                    const seq = data.seq || 0;
+
+                    // Server Authoritative Movement Calculation (Speed 5.0, Step 0.05)
+                    const moveSpeed = 5.0;
+                    const moveDelta = 0.05; 
+                    
+                    let dx = input.x;
+                    let dy = input.y;
+                    const magnitude = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (magnitude > 0.01) {
+                        dx = (dx / magnitude) * moveSpeed * moveDelta;
+                        dy = (dy / magnitude) * moveSpeed * moveDelta;
+                        
+                        p.position.x += dx;
+                        p.position.y += dy;
+                    }
+
+                    // Broadcast "player_update" to ALL in room (including self for reconciliation)
+                    const payload = JSON.stringify({
+                        tipo: 'player_update',
+                        userId: ws.userId,
+                        pos: p.position,
+                        seq: seq
+                    });
+
+                    wss.clients.forEach(c => {
+                        if (c.readyState === 1 && String(c.gameId) === String(ws.gameId)) {
+                            c.send(payload);
+                        }
+                    });
                 }
-                const movePayload = JSON.stringify({ tipo: 'jugador_movido', userId: ws.userId, posicion: data.posicion, velocidad: data.velocidad, mirando: data.mirando });
-                wss.clients.forEach(c => { if (c !== ws && c.gameId === ws.gameId) c.send(movePayload); });
             } else if (data.tipo === 'countdown_finished') {
                 if (ws.gameId === 'singleplayer') { waveManager.startGame(ws.gameId); return; }
                 if (!countdownStates.has(ws.gameId)) countdownStates.set(ws.gameId, new Set());

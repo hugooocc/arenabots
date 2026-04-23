@@ -47,7 +47,7 @@ namespace Antigravity.Player
         }
         private System.Collections.Generic.List<PredictionState> pendingStates = new System.Collections.Generic.List<PredictionState>();
         private int currentSeq = 0;
-        private float reconciliationThreshold = 0.1f;
+        private float reconciliationThreshold = 0.25f;
 
         private void Start()
         {
@@ -127,7 +127,6 @@ namespace Antigravity.Player
             }
 
             Vector2 movement = Vector2.zero;
-            // Get inputs
             if (Keyboard.current != null)
             {
                 if (Keyboard.current.wKey.isPressed) movement.y += 1f;
@@ -145,18 +144,24 @@ namespace Antigravity.Player
             bool isMultiplayer = Antigravity.Auth.GameSession.CurrentGameId != "singleplayer";
 
             if (isMultiplayer) {
-                // prediction
-                currentSeq++;
+                // Smooth Prediction (Frame by frame)
                 Vector2 velocity = movement.normalized * moveSpeed;
                 rb.position += velocity * Time.fixedDeltaTime; 
 
-                // Store for reconciliation
-                pendingStates.Add(new PredictionState { seq = currentSeq, input = movement, pos = rb.position });
+                // Send network packet exactly every 0.05s (20Hz)
+                if (Time.time >= nextNetTickTime) {
+                    currentSeq++;
+                    
+                    // Store the position reached at this sequence for reconciliation
+                    pendingStates.Add(new PredictionState { seq = currentSeq, input = movement, pos = rb.position });
 
-                // Send to server
-                if (Antigravity.Shooting.NetworkManager.Instance != null && Antigravity.Shooting.NetworkManager.Instance.IsConnected) {
-                    var msg = new InputMessage { input = movement, seq = currentSeq };
-                    Antigravity.Shooting.NetworkManager.Instance.SendMessage(JsonUtility.ToJson(msg));
+                    // Send to server
+                    if (Antigravity.Shooting.NetworkManager.Instance != null && Antigravity.Shooting.NetworkManager.Instance.IsConnected) {
+                        var msg = new InputMessage { input = movement, seq = currentSeq };
+                        Antigravity.Shooting.NetworkManager.Instance.SendMessage(JsonUtility.ToJson(msg));
+                    }
+                    
+                    nextNetTickTime = Time.time + 0.05f;
                 }
             } else {
                 // Standard Authoritative Movement (Local)
@@ -171,8 +176,11 @@ namespace Antigravity.Player
                     animator.SetFloat(MoveXHash, movement.x);
                     animator.SetFloat(MoveYHash, movement.y);
                 }
-                animator.SetFloat(SpeedHash, rb.linearVelocity.magnitude);
+                float animSpeed = isMultiplayer ? movement.magnitude * moveSpeed : rb.linearVelocity.magnitude;
+                animator.SetFloat(SpeedHash, animSpeed);
             }
         }
+
+        private float nextNetTickTime = 0f;
     }
 }
