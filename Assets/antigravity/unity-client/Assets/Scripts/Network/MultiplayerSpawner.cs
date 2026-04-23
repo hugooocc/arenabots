@@ -52,14 +52,6 @@ namespace Antigravity.Network
                     var p = JsonUtility.FromJson<PlayerData>(rawMessage);
                     RemoveRemotePlayer(p.userId);
                 }
-                else if (baseMsg.tipo == "jugador_movido")
-                {
-                    var move = JsonUtility.FromJson<MoveMessage>(rawMessage);
-                    if (remotePlayers.ContainsKey(move.userId))
-                    {
-                        remotePlayers[move.userId].UpdateState(move.posicion, move.velocidad, move.mirando);
-                    }
-                }
             }
             catch (System.Exception e)
             {
