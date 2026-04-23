@@ -117,6 +117,15 @@ namespace Antigravity.Network
 
             // Ensure it's active and visible
             go.SetActive(true);
+
+            // SHRINK HITBOX to 60% to avoid "wall" feeling
+            var collider = go.GetComponent<Collider2D>();
+            if (collider != null) {
+                if (collider is BoxCollider2D box) box.size *= 0.6f;
+                else if (collider is CapsuleCollider2D capsule) capsule.size *= 0.6f;
+                else if (collider is CircleCollider2D circle) circle.radius *= 0.6f;
+            }
+
             var renderers = go.GetComponentsInChildren<SpriteRenderer>();
             foreach(var r in renderers) {
                 r.enabled = true;

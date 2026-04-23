@@ -33,6 +33,14 @@ namespace Antigravity.Player
             
             // FÍSICAS: Bloquear la rotación Z para que el personaje no dé volteretas al chocar
             rb.freezeRotation = true;
+
+            // SHRINK HITBOX
+            var col = GetComponent<Collider2D>();
+            if (col != null) {
+                if (col is BoxCollider2D box) box.size *= 0.6f;
+                else if (col is CapsuleCollider2D capsule) capsule.size *= 0.6f;
+                else if (col is CircleCollider2D circle) circle.radius *= 0.6f;
+            }
         }
 
         public bool canMove = true;
