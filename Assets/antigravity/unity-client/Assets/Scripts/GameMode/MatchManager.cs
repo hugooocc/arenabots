@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using System.Collections;
 using Antigravity.Player;
+using Cinemachine;
 
 namespace Antigravity.GameMode
 {
@@ -25,7 +26,7 @@ namespace Antigravity.GameMode
         {
             if (Camera.main == null) return;
             // Support for both Cinemachine and standard camera
-            var cinemachine = Camera.main.GetComponent<Cinemachine.CinemachineVirtualCamera>();
+            var cinemachine = Camera.main.GetComponent<CinemachineVirtualCamera>();
             
             switch (currentViewState)
             {
@@ -323,7 +324,7 @@ namespace Antigravity.GameMode
                 }
                 else if (rawMessage.Contains("\"tipo\":\"jugador_muerto\""))
                 {
-                    var msg = JsonUtility.FromJson<Antigravity.Shooting.MoveMessage>(rawMessage);
+                    var msg = JsonUtility.FromJson<Antigravity.Network.MoveMessage>(rawMessage);
                     if (msg.userId == Antigravity.Auth.GameSession.UserId) {
                         Debug.Log("[MatchManager] He muerto. Pasando a Modo Espectador.");
                         SetCameraState(CameraState.SPECTATE);
