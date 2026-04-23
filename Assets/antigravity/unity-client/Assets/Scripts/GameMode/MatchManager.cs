@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using System.Collections;
 using Antigravity.Player;
-using Cinemachine;
+using Antigravity.CameraSystem;
 
 namespace Antigravity.GameMode
 {
@@ -21,26 +21,24 @@ namespace Antigravity.GameMode
         private CameraState currentViewState = CameraState.FOLLOW;
         private Transform cameraFollowTarget;
 
-
         private void UpdateCameraLogic()
         {
             if (Camera.main == null) return;
-            // Support for both Cinemachine and standard camera
-            var cinemachine = Camera.main.GetComponent<CinemachineVirtualCamera>();
+            var cameraFollow = Camera.main.GetComponent<CameraFollow>();
             
             switch (currentViewState)
             {
                 case CameraState.FOLLOW:
-                    // Local player usually handled by cinemachine "Follow" target already set
+                    // Local player usually handled by CameraFollow "target" already set
                     break;
 
                 case CameraState.SPECTATE:
                     if (cameraFollowTarget == null) FindNewSpectatorTarget();
-                    if (cinemachine != null) cinemachine.Follow = cameraFollowTarget;
+                    if (cameraFollow != null) cameraFollow.target = cameraFollowTarget;
                     break;
 
                 case CameraState.OVERVIEW:
-                    if (cinemachine != null) cinemachine.Follow = null;
+                    if (cameraFollow != null) cameraFollow.target = null;
                     Camera.main.transform.position = Vector3.Lerp(Camera.main.transform.position, new Vector3(0, 0, -10), Time.deltaTime);
                     break;
             }
