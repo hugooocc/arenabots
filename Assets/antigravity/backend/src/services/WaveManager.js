@@ -70,22 +70,32 @@ class WaveManager {
     }
 
     updateEnemiesAI(gameId) {
+        const gameData = this.activeGames.get(gameId);
+        if (!gameData) return;
+
         const enemies = EnemyAI.rooms.get(gameId);
         if (!enemies || enemies.size === 0) return;
 
         // Obtener jugadores vivos para targets
         const roomPlayers = [];
         const targetId = String(gameId);
+        let clientsChecked = 0;
+        let matchedClients = 0;
 
         this.wss.clients.forEach(c => {
-            if (c.readyState === 1 && String(c.gameId) === targetId && c.userId && this.players.has(c.userId)) {
+            clientsChecked++;
+            const clientGameId = String(c.gameId || "");
+            if (c.readyState === 1 && clientGameId === targetId && c.userId && this.players.has(c.userId)) {
+                matchedClients++;
                 const p = this.players.get(c.userId);
                 if (p && p.isAlive) roomPlayers.push(p);
             }
         });
 
         if (roomPlayers.length === 0) {
-            // Nota: Al no haber jugadores vivos, los enemigos se quedan "idle" (no actualizan posición)
+            if (gameData.serverTick % 100 === 0) { // Log every 5 seconds (100 ticks * 50ms)
+                console.log(`[DEBUG-AI] Sala ${targetId}: 0 jugadores válidos. (Clientes: ${clientsChecked}, Match: ${matchedClients})`);
+            }
             return;
         }
 
