@@ -142,8 +142,11 @@ function handleDeath(ws, data, wss, waveManager) {
 
     // Comprobar si todos han muerto en esta partida específica
     const roomSessions = [];
+    const searchId = String(targetGameId);
+    
     wss.clients.forEach(c => {
-        if (String(c.gameId) === targetGameId && c.userId && players.has(c.userId)) {
+        const clientGameId = String(c.gameId || "");
+        if (clientGameId === searchId && c.userId && players.has(c.userId)) {
             roomSessions.push(players.get(c.userId));
         }
     });

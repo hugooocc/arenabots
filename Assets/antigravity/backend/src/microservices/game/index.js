@@ -118,7 +118,7 @@ wss.on('connection', async (ws, req) => {
             const message = rawMessage.toString();
             const data = JSON.parse(message);
             
-            console.log(`[WS] Message from ${ws.username || 'unknown'}:`, data.tipo);
+            // console.log(`[WS] Message from ${ws.username || 'unknown'}:`, data.tipo); // Desactivado para reducir spam
 
             if (data.tipo === 'player_ready') {
                 ws.isReady = true;

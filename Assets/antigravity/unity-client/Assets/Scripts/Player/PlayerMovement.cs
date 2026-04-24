@@ -91,7 +91,7 @@ namespace Antigravity.Player
             // but we'll compare current position with server position after re-applying pending
             float dist = Vector2.Distance(rb.position, serverPos);
             if (dist > reconciliationThreshold) {
-                Debug.Log($"[Reconciliation] Correcting player: Dist {dist}. Seq {seq}");
+                // Debug.Log($"[Reconciliation] Correcting player: Dist {dist}. Seq {seq}");
                 rb.position = serverPos;
 
                 // 3. Re-simulate pending inputs
