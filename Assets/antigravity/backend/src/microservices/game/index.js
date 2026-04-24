@@ -102,7 +102,7 @@ wss.on('connection', async (ws, req) => {
                 const PlayerSession = require('../models/PlayerSession');
                 if (userId) {
                     // Always create a fresh session for the new game joined
-                    const session = new PlayerSession(userId);
+                    const session = new PlayerSession(userId, gameId);
                     session.username = ws.username || "Jugador";
                     players.set(userId, session);
                 }

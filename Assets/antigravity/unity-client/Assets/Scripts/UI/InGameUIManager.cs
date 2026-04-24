@@ -248,15 +248,16 @@ namespace Antigravity.UI
                 endGameInstance.style.display = DisplayStyle.Flex;
                 if (finalStatsKills != null)
                 {
-                    string summary = "RESULTADOS DE LA INCURSIÓN:\n\n";
+                    string summary = "RESULTADOS DE LA INCURSIÓN:\n";
                     foreach (var s in stats) {
                         string shortId = s.userId != null && s.userId.Length > 6 ? s.userId.Substring(0, 6) : "USER";
-                        summary += $"ID: {shortId} | Bajas: {s.kills} | Tiempo: {s.time}s\n";
+                        summary += $"\n[ID: {shortId}] BAJAS: {s.kills} | TIEMPO: {s.time}s";
                     }
                     finalStatsKills.text = summary;
-                    finalStatsKills.style.fontSize = 20; 
+                    finalStatsKills.style.unityTextAlign = TextAnchor.MiddleCenter;
+                    finalStatsKills.style.whiteSpace = WhiteSpace.Normal; // Enable word wrapping
                 }
-                if (finalStatsTime != null) finalStatsTime.text = ""; // Clear time label in MP summary
+                if (finalStatsTime != null) finalStatsTime.text = ""; 
             }
         }
 

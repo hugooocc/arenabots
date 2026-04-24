@@ -1,6 +1,7 @@
 class PlayerSession {
-    constructor(playerId) {
+    constructor(playerId, gameId) {
         this.playerId = playerId;
+        this.gameId = gameId; // Guardar sala para búsquedas rápidas
         this.isAlive = true;
         this.lastFireTimestamps = []; // Rolling cache of last 10 firing times
         this.kills = 0;

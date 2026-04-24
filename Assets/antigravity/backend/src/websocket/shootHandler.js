@@ -141,35 +141,32 @@ function handleDeath(ws, data, wss, waveManager) {
     });
 
     // Comprobar si todos han muerto en esta partida específica
-    const roomSessions = [];
     const searchId = String(targetGameId);
-    
-    wss.clients.forEach(c => {
-        const clientGameId = String(c.gameId || "");
-        if (clientGameId === searchId && c.userId && players.has(c.userId)) {
-            roomSessions.push(players.get(c.userId));
-        }
-    });
-
+    const roomSessions = Array.from(players.values()).filter(p => String(p.gameId) === searchId);
     const aliveInRoom = roomSessions.filter(p => p.isAlive);
-    console.log(`[DEBUG-GAMEOVER] Sala: ${targetGameId}, Total: ${roomSessions.length}, Vivos: ${aliveInRoom.length}`);
+    
+    console.log(`[DEBUG-GAMEOVER] Sala: ${searchId}, Sesiones vinculadas: ${roomSessions.length}, Vivos: ${aliveInRoom.length}`);
     
     if (aliveInRoom.length === 0 && roomSessions.length > 0) {
-        const room = waveManager.activeGames.get(targetGameId);
+        const room = waveManager.activeGames.get(searchId);
+        
+        // FAIL-SAFE: Si la sala no está en activeGames hoy, pero los jugadores están aquí, 
+        // igual deberíamos intentar enviar el Game Over si no se ha enviado ya.
         if (!room) {
-            console.log(`[DEBUG-GAMEOVER] No se encontró la sala ${targetGameId} en activeGames.`);
+            console.log(`[DEBUG-GAMEOVER] Sala ${searchId} no encontrada en waveManager. ¿Ya finalizó?`);
             return;
         }
 
-        console.log(`[DEBUG-GAMEOVER] Intentando disparar Game Over. room.gameOverTriggered: ${room.gameOverTriggered}`);
-        if (room.gameOverTriggered) return;
+        if (room.gameOverTriggered) {
+            console.log(`[DEBUG-GAMEOVER] Game Over ya disparado anteriormente para la sala ${searchId}.`);
+            return;
+        }
         room.gameOverTriggered = true;
 
-        console.log(`[DEBUG-GAMEOVER] ¡ENVIANDO GAME_OVER!`);
+        console.log(`[DEBUG-GAMEOVER] ¡DISPARANDO GAME_OVER PARA ${roomSessions.length} JUGADORES!`);
         
         const roomStats = roomSessions.map(p => ({
-            userId: p.playerId,
-            username: p.username || "Jugador",
+            userId: String(p.playerId),
             kills: p.kills,
             time: Math.floor((Date.now() - p.startTime) / 1000)
         }));
@@ -179,20 +176,21 @@ function handleDeath(ws, data, wss, waveManager) {
             stats: roomStats
         });
 
+        // Enviar a todos los clientes que pertenezcan a esta sala
         wss.clients.forEach(c => {
-            if (String(c.gameId) === targetGameId && c.readyState === WebSocket.OPEN) {
-                console.log(`[DEBUG-GAMEOVER] Enviando a socket de usuario: ${c.userId}`);
+            if (String(c.gameId) === searchId && c.readyState === WebSocket.OPEN) {
+                console.log(`[DEBUG-GAMEOVER] Enviando stats a: ${c.userId}`);
                 c.send(gameOverPayload);
             }
         });
 
         // Detener lógica de hordas y marcar en DB
-        waveManager.stopGame(targetGameId);
+        waveManager.stopGame(searchId);
         
         const gameService = require('../services/GameService');
-        gameService.finishGame(targetGameId).catch(err => console.error(err));
-    } else if (aliveInRoom.length > 0) {
-        console.log(`[DEBUG-GAMEOVER] No se dispara Game Over porque aún quedan ${aliveInRoom.length} jugadores vivos.`);
+        gameService.finishGame(searchId).catch(err => console.error("[CRITICAL] Error en finishGame:", err));
+    } else {
+        console.log(`[DEBUG-GAMEOVER] Aún quedan ${aliveInRoom.length} jugadores vivos en la sala.`);
     }
 }
 
