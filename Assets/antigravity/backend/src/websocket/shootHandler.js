@@ -122,13 +122,22 @@ function handleDeath(ws, data, wss, waveManager) {
     if (tipo !== 'player_dead') return;
 
     const userId = ws.userId;
-    if (!userId || !players.has(userId)) return;
+    console.log(`[DEBUG-GAMEOVER] Recibido player_dead. ws.userId: ${userId}, partidaId: ${partidaId}`);
+    
+    if (!userId || !players.has(userId)) {
+        console.log(`[DEBUG-GAMEOVER] Usuario no encontrado en el mapa 'players'. userId: ${userId}, Total en mapa: ${players.size}`);
+        if (userId) console.log("[DEBUG-GAMEOVER] Claves en mapa:", Array.from(players.keys()));
+        return;
+    }
 
     const session = players.get(userId);
-    if (!session.isAlive) return;
+    if (!session.isAlive) {
+        console.log(`[DEBUG-GAMEOVER] El usuario ${userId} ya estaba marcado como muerto.`);
+        return;
+    }
 
     session.isAlive = false;
-    console.log(`[WS] Jugador ${userId} ha muerto en partida ${partidaId}`);
+    console.log(`[DEBUG-GAMEOVER] Marcado usuario ${userId} como MUERTO.`);
 
     const targetGameId = String(partidaId || ws.gameId);
     
