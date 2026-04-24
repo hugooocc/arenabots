@@ -155,6 +155,9 @@ function handleDeath(ws, data, wss, waveManager) {
     const aliveInRoom = roomSessions.filter(p => p.isAlive);
     
     console.log(`[DEBUG-GAMEOVER] Sala: ${searchId}, Sesiones vinculadas: ${roomSessions.length}, Vivos: ${aliveInRoom.length}`);
+    roomSessions.forEach(p => {
+        console.log(`[DEBUG-GAMEOVER] - Jugador ${p.playerId} (Vivo: ${p.isAlive})`);
+    });
     
     if (aliveInRoom.length === 0 && roomSessions.length > 0) {
         const room = waveManager.activeGames.get(searchId);
