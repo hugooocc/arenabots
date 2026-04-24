@@ -6,6 +6,7 @@ namespace Antigravity.Network
     {
         public string userId;
         public string username;
+        public bool IsAlive { get; set; } = true;
 
         private Vector3 targetPosition;
         private Vector2 lastVelocity;

@@ -17,7 +17,8 @@ class WaveManager {
             serverTick: 0,
             startTime: Date.now(),
             waveCount: 1,
-            intervals: []
+            intervals: [],
+            gameOverTriggered: false
         };
 
         // 1. Spawner de Enemigos (cada 5s)
@@ -79,12 +80,12 @@ class WaveManager {
         this.wss.clients.forEach(c => {
             if (c.readyState === 1 && String(c.gameId) === targetId && c.userId && this.players.has(c.userId)) {
                 const p = this.players.get(c.userId);
-                if (p.isAlive) roomPlayers.push(p);
+                if (p && p.isAlive) roomPlayers.push(p);
             }
         });
 
         if (roomPlayers.length === 0) {
-            // console.log(`[WaveManager] Sala ${targetId}: Sin jugadores vivos.`);
+            // Nota: Al no haber jugadores vivos, los enemigos se quedan "idle" (no actualizan posición)
             return;
         }
 

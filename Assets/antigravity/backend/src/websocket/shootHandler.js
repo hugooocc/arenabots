@@ -152,9 +152,12 @@ function handleDeath(ws, data, wss, waveManager) {
     console.log(`[WS] Muerte procesada. Jugadores en sala ${targetGameId}: ${roomSessions.length}, Vivos: ${aliveInRoom.length}`);
     
     if (aliveInRoom.length === 0 && roomSessions.length > 0) {
-        // PROTECCIÓN: Solo enviar Game Over una vez por sala
-        if (session.gameOverTriggered) return;
-        roomSessions.forEach(s => s.gameOverTriggered = true);
+        const room = waveManager.activeGames.get(targetGameId);
+        if (!room) return; // Ya se detuvo o no existe
+
+        // PROTECCIÓN: Solo enviar Game Over una vez por sala (arquitectura autoritativa)
+        if (room.gameOverTriggered) return;
+        room.gameOverTriggered = true;
 
         console.log(`[WS] ¡TODOS MUERTOS en ${targetGameId}! Enviando estadísticas finales.`);
         
@@ -177,7 +180,7 @@ function handleDeath(ws, data, wss, waveManager) {
         });
 
         // Detener lógica de hordas y marcar en DB
-        if (waveManager) waveManager.stopGame(targetGameId);
+        waveManager.stopGame(targetGameId);
         
         const gameService = require('../services/GameService');
         gameService.finishGame(targetGameId).catch(err => console.error(err));

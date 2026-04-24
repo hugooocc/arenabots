@@ -47,6 +47,11 @@ namespace Antigravity.Network
                     var p = JsonUtility.FromJson<PlayerData>(rawMessage);
                     SpawnRemotePlayer(p.userId, p.username);
                 }
+                else if (baseMsg.tipo == "jugador_muerto")
+                {
+                    var p = JsonUtility.FromJson<PlayerData>(rawMessage);
+                    MarkRemotePlayerDead(p.userId);
+                }
                 else if (baseMsg.tipo == "jugador_desconectado")
                 {
                     var p = JsonUtility.FromJson<PlayerData>(rawMessage);
@@ -144,6 +149,21 @@ namespace Antigravity.Network
                 Destroy(remotePlayers[userId].gameObject);
                 remotePlayers.Remove(userId);
                 Debug.Log($"[MultiplayerSpawner] Removed remote player: {userId}");
+            }
+        }
+
+        private void MarkRemotePlayerDead(string userId)
+        {
+            if (remotePlayers.ContainsKey(userId))
+            {
+                var np = remotePlayers[userId];
+                np.IsAlive = false;
+                
+                // Trigger animation if animator exists
+                Animator anim = np.GetComponentInChildren<Animator>();
+                if (anim != null) anim.SetTrigger("Die");
+                
+                Debug.Log($"[MultiplayerSpawner] Remote player DIED: {userId}");
             }
         }
     }

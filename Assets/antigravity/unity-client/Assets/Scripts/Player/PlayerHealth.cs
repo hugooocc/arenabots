@@ -8,6 +8,7 @@ namespace Antigravity.Player
         [Header("Health Settings")]
         public int maxHealth = 100;
         public int currentHealth;
+        public bool IsAlive { get; private set; } = true;
 
         public event Action<int, int> OnHealthChanged;
         public event Action OnPlayerDeath;
@@ -49,6 +50,9 @@ namespace Antigravity.Player
 
         private void Die()
         {
+            if (!IsAlive) return;
+            IsAlive = false;
+
             Debug.Log("[PlayerHealth] ¡EL JUGADOR HA SIDO DERROTADO!");
             
             if (animator != null)
