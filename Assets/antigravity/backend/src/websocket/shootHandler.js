@@ -149,17 +149,20 @@ function handleDeath(ws, data, wss, waveManager) {
     });
 
     const aliveInRoom = roomSessions.filter(p => p.isAlive);
-    console.log(`[WS] Muerte procesada. Jugadores en sala ${targetGameId}: ${roomSessions.length}, Vivos: ${aliveInRoom.length}`);
+    console.log(`[DEBUG-GAMEOVER] Sala: ${targetGameId}, Total: ${roomSessions.length}, Vivos: ${aliveInRoom.length}`);
     
     if (aliveInRoom.length === 0 && roomSessions.length > 0) {
         const room = waveManager.activeGames.get(targetGameId);
-        if (!room) return; // Ya se detuvo o no existe
+        if (!room) {
+            console.log(`[DEBUG-GAMEOVER] No se encontró la sala ${targetGameId} en activeGames.`);
+            return;
+        }
 
-        // PROTECCIÓN: Solo enviar Game Over una vez por sala (arquitectura autoritativa)
+        console.log(`[DEBUG-GAMEOVER] Intentando disparar Game Over. room.gameOverTriggered: ${room.gameOverTriggered}`);
         if (room.gameOverTriggered) return;
         room.gameOverTriggered = true;
 
-        console.log(`[WS] ¡TODOS MUERTOS en ${targetGameId}! Enviando estadísticas finales.`);
+        console.log(`[DEBUG-GAMEOVER] ¡ENVIANDO GAME_OVER!`);
         
         const roomStats = roomSessions.map(p => ({
             userId: p.playerId,
@@ -175,6 +178,7 @@ function handleDeath(ws, data, wss, waveManager) {
 
         wss.clients.forEach(c => {
             if (String(c.gameId) === targetGameId && c.readyState === WebSocket.OPEN) {
+                console.log(`[DEBUG-GAMEOVER] Enviando a socket de usuario: ${c.userId}`);
                 c.send(gameOverPayload);
             }
         });
@@ -184,6 +188,8 @@ function handleDeath(ws, data, wss, waveManager) {
         
         const gameService = require('../services/GameService');
         gameService.finishGame(targetGameId).catch(err => console.error(err));
+    } else if (aliveInRoom.length > 0) {
+        console.log(`[DEBUG-GAMEOVER] No se dispara Game Over porque aún quedan ${aliveInRoom.length} jugadores vivos.`);
     }
 }
 

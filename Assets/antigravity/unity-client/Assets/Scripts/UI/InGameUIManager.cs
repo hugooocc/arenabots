@@ -219,14 +219,21 @@ namespace Antigravity.UI
 
         private void HandleNetworkMessage(string rawMessage)
         {
+            // Debug.Log("[InGameUIManager] Mensaje recibido: " + rawMessage);
             try {
                 if (rawMessage.Contains("\"tipo\":\"game_over\"")) {
-                    Debug.Log("[InGameUIManager] Game Over received from network.");
+                    Debug.Log("[InGameUIManager] ¡GAME_OVER detectado en el string del mensaje!");
                     var baseMsg = JsonUtility.FromJson<Antigravity.Network.GameOverMessage>(rawMessage);
-                    ShowMultiplayerStats(baseMsg.stats);
+                    
+                    if (baseMsg != null && baseMsg.stats != null) {
+                        Debug.Log($"[InGameUIManager] Stats parseadas correctamente. Cantidad: {baseMsg.stats.Length}");
+                        ShowMultiplayerStats(baseMsg.stats);
+                    } else {
+                        Debug.LogError("[InGameUIManager] Error parseando GameOverMessage: baseMsg o stats es null.");
+                    }
                 }
             } catch (Exception e) {
-                Debug.LogWarning("[InGameUIManager] Error parsing network message: " + e.Message);
+                Debug.LogError("[InGameUIManager] Excepción parseando mensaje: " + e.Message);
             }
         }
 

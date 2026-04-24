@@ -342,6 +342,7 @@ namespace Antigravity.GameMode
                 }
                 else if (rawMessage.Contains("\"tipo\":\"game_over\""))
                 {
+                    Debug.Log("[MatchManager] ¡GAME_OVER recibido en MatchManager!");
                     SetCameraState(CameraState.OVERVIEW);
                 }
                 else if (rawMessage.Contains("\"tipo\":\"start_countdown\""))
