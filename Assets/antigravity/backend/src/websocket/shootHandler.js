@@ -137,7 +137,7 @@ function handleDeath(ws, data, wss, waveManager) {
     }
 
     session.isAlive = false;
-    console.log(`[DEBUG-GAMEOVER] Marcado usuario ${userId} como MUERTO.`);
+    console.log(`[DEBUG-GAMEOVER] Marcado usuario ${userId} como MUERTO. isAlive ahora es ${session.isAlive}`);
 
     const targetGameId = String(partidaId || ws.gameId);
     
@@ -153,6 +153,11 @@ function handleDeath(ws, data, wss, waveManager) {
     const searchId = String(targetGameId);
     const roomSessions = Array.from(players.values()).filter(p => String(p.gameId) === searchId);
     const aliveInRoom = roomSessions.filter(p => p.isAlive);
+    
+    console.log(`[CRITICAL-DEBUG] Sala: ${searchId}`);
+    console.log(`[CRITICAL-DEBUG] Total en sala: ${roomSessions.length}`);
+    console.log(`[CRITICAL-DEBUG] Vivos: ${aliveInRoom.length}`);
+    roomSessions.forEach(p => console.log(`  - Jugador: ${p.playerId}, isAlive: ${p.isAlive}`));
     
     console.log(`[DEBUG-GAMEOVER] Sala: ${searchId}, Sesiones vinculadas: ${roomSessions.length}, Vivos: ${aliveInRoom.length}`);
     roomSessions.forEach(p => {
