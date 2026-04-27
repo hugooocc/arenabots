@@ -23,6 +23,7 @@ namespace Antigravity.Shooting
             ? Antigravity.Config.AntigravityConfig.Instance.WsBaseUrl 
             : "ws://localhost:3000";
         private string connectedGameId; // Almacena el código de sala real de la conexión del WebSocket
+        private WebSocket websocket;
 
         public bool IsConnected => websocket != null && websocket.State == WebSocketState.Open;
 
