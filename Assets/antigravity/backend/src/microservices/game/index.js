@@ -239,6 +239,12 @@ wss.on('connection', async (ws, req) => {
     });
 
     ws.on('close', async () => {
+        if (ws.userId && players.has(ws.userId)) {
+            // Marca como muerto para no bloquear el Game Over de la sala
+            const p = players.get(ws.userId);
+            if (p) p.isAlive = false; 
+        }
+
         if (ws.gameId) {
             wss.clients.forEach(c => { if (c !== ws && c.gameId === ws.gameId) c.send(JSON.stringify({ tipo: 'jugador_desconectado', userId: ws.userId })); });
             let someoneLeft = false;
@@ -247,6 +253,10 @@ wss.on('connection', async (ws, req) => {
                 // Game Over logic
                 waveManager.stopGame(ws.gameId);
                 gameService.finishGame(ws.gameId).catch(() => {});
+            } else {
+                // Hay alguien más en la sala, comprobemos manualmente si con esta desconexión ya no queda nadie vivo
+                const { handleDeath } = require('../../websocket/shootHandler');
+                handleDeath(ws, { tipo: 'player_dead', partidaId: ws.gameId }, wss, waveManager);
             }
         }
     });

@@ -38,7 +38,10 @@ namespace Antigravity.GameMode
                     break;
 
                 case CameraState.OVERVIEW:
-                    if (cameraFollow != null) cameraFollow.target = null;
+                    if (cameraFollow != null) {
+                        cameraFollow.enabled = false;
+                        cameraFollow.target = null;
+                    }
                     Camera.main.transform.position = Vector3.Lerp(Camera.main.transform.position, new Vector3(0, 0, -10), Time.deltaTime);
                     break;
             }
@@ -289,6 +292,16 @@ namespace Antigravity.GameMode
                     if (msg.userId == Antigravity.Auth.GameSession.UserId) {
                         Debug.Log("[MatchManager] He muerto. Pasando a Modo Espectador.");
                         SetCameraState(CameraState.SPECTATE);
+                    } else {
+                        // Mark the remote player as dead so the camera won't follow them
+                        var allRemotes = FindObjectsByType<Antigravity.Network.NetworkPlayer>(FindObjectsSortMode.None);
+                        foreach (var rp in allRemotes) {
+                            if (rp.userId == msg.userId) {
+                                rp.IsAlive = false;
+                                Debug.Log($"[MatchManager] Marcando remoto {msg.userId} como MUERTO para la cámara.");
+                                break;
+                            }
+                        }
                     }
                 }
                 else if (rawMessage.Contains("\"tipo\":\"game_over\""))
