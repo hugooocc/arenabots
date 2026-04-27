@@ -22,7 +22,7 @@ function handleShoot(ws, data, wss) {
 
     // Obtener o crear sesión del jugador (simulado para este paso)
     if (!players.has(jugadorId)) {
-        players.set(jugadorId, new PlayerSession(jugadorId));
+        players.set(jugadorId, new PlayerSession(jugadorId, partidaId));
     }
     const session = players.get(jugadorId);
 

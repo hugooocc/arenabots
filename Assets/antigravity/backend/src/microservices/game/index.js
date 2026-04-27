@@ -99,7 +99,7 @@ wss.on('connection', async (ws, req) => {
                 if (!game) { ws.close(4004, "Game not found"); return; }
                 const isRegistered = game.players.some(p => p.toString() === userId?.toString());
                 if (!isRegistered) { ws.close(4003, "Not registered"); return; }
-                const PlayerSession = require('../models/PlayerSession');
+                const PlayerSession = require('../../models/PlayerSession');
                 if (userId) {
                     // Always create a fresh session for the new game joined
                     const session = new PlayerSession(userId, gameId);
