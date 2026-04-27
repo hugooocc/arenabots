@@ -93,7 +93,38 @@ class WaveManager {
         });
 
         if (roomPlayers.length === 0) {
-            if (gameData.serverTick % 100 === 0) { // Log every 5 seconds (100 ticks * 50ms)
+            // REDUNDANCIA: Si no hay nadie vivo pero la partida sigue "activa", 
+            // disparamos el Game Over después de un pequeño margen para asegurar
+            // que si hay un error en el mensaje player_dead, la partida termine igual.
+            if (!gameData.gameOverTriggered && matchedClients > 0) {
+                console.log(`[DEBUG-AI] Sala ${targetId}: Todos muertos o desconectados. Disparando Game Over redundante.`);
+                
+                // IMPORTANTE: Re-usamos la lógica de shootHandler si podemos, o la replicamos aquí
+                const { handleDeath } = require('../websocket/shootHandler');
+                // Simulamos una llamada a handleDeath con una socket ficticia o simplemente
+                // disparamos el broadcast. Por simplicidad, replicamos el broadcast aquí.
+                
+                gameData.gameOverTriggered = true;
+                const roomSessions = Array.from(this.players.values()).filter(p => String(p.gameId) === targetId);
+                const roomStats = roomSessions.map(p => ({
+                    userId: String(p.playerId),
+                    kills: p.kills,
+                    time: Math.floor((Date.now() - p.startTime) / 1000)
+                }));
+
+                const gameOverPayload = JSON.stringify({ tipo: 'game_over', stats: roomStats });
+                this.wss.clients.forEach(c => {
+                    if (String(c.gameId) === targetId && c.readyState === 1) {
+                        c.send(gameOverPayload);
+                    }
+                });
+
+                this.stopGame(targetId);
+                const gameService = require('../services/GameService');
+                gameService.finishGame(targetId).catch(() => {});
+            }
+
+            if (gameData.serverTick % 100 === 0) { 
                 console.log(`[DEBUG-AI] Sala ${targetId}: 0 jugadores válidos. (Clientes: ${clientsChecked}, Match: ${matchedClients})`);
             }
             return;
