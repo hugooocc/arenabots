@@ -105,7 +105,8 @@ namespace Antigravity.Network
                 typeof(Antigravity.Shooting.ShootController),
                 typeof(AudioListener),
                 typeof(Camera),
-                typeof(Antigravity.Network.PlayerNetworkSync)
+                typeof(Antigravity.Network.PlayerNetworkSync),
+                typeof(Antigravity.Player.PlayerHealth) // CRITICO: Los clones no pueden tener PlayerHealth o actúan como dobles locales.
             };
 
             foreach(var type in scriptsToDestroy) {
@@ -122,6 +123,7 @@ namespace Antigravity.Network
 
             // Ensure it's active and visible
             go.SetActive(true);
+            go.tag = "Untagged"; // Evita que la IA muerda el clon y lance NullReference
 
             // SHRINK HITBOX to 60% to avoid "wall" feeling
             var collider = go.GetComponent<Collider2D>();

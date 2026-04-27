@@ -22,7 +22,7 @@ namespace Antigravity.Shooting
         public string serverUrl => Antigravity.Config.AntigravityConfig.Instance != null 
             ? Antigravity.Config.AntigravityConfig.Instance.WsBaseUrl 
             : "ws://localhost:3000";
-        private WebSocket websocket;
+        private string connectedGameId; // Almacena el código de sala real de la conexión del WebSocket
 
         public bool IsConnected => websocket != null && websocket.State == WebSocketState.Open;
 
@@ -60,11 +60,12 @@ namespace Antigravity.Shooting
                 if (!string.IsNullOrEmpty(Antigravity.Auth.GameSession.CurrentGameId) && 
                     !string.IsNullOrEmpty(Antigravity.Auth.GameSession.Token))
                 {
-                    // FIX: Don't reconnect if already connected to a game!
-                    if (websocket == null || websocket.State != WebSocketState.Open) {
+                    // FIX: Si el Game ID en memoria ha cambiado (ej: el jugador ha creado una partida nueva)
+                    // DEBEMOS reabrir el WebSocket para que el servidor registre el nuevo handshake.
+                    if (websocket == null || websocket.State != WebSocketState.Open || connectedGameId != Antigravity.Auth.GameSession.CurrentGameId) {
                         ConnectToGame(Antigravity.Auth.GameSession.CurrentGameId, Antigravity.Auth.GameSession.Token);
                     } else {
-                        Debug.Log("[NetworkManager] Already connected. Maintaining session for Arena.");
+                        Debug.Log("[NetworkManager] Ya estamos en la sesión correcta. Manteniendo la conexión en el Arena.");
                     }
                 }
                 else 
@@ -80,6 +81,8 @@ namespace Antigravity.Shooting
             {
                 await websocket.Close();
             }
+            
+            connectedGameId = gameId;
 
             string url = $"{serverUrl}?gameId={gameId}&token={token}";
             websocket = new WebSocket(url);

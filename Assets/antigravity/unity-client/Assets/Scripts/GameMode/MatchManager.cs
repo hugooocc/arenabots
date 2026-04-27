@@ -33,8 +33,8 @@ namespace Antigravity.GameMode
                     break;
 
                 case CameraState.SPECTATE:
-                    if (cameraFollowTarget == null) FindNewSpectatorTarget();
-                    if (cameraFollow != null) cameraFollow.target = cameraFollowTarget;
+                    // Dejamos que CameraFollow reajuste su target autónomamente.
+                    // Si su objetivo se pone en null o isAlive == false, él mismo buscará a un aliado vivo.
                     break;
 
                 case CameraState.OVERVIEW:
@@ -42,22 +42,6 @@ namespace Antigravity.GameMode
                     Camera.main.transform.position = Vector3.Lerp(Camera.main.transform.position, new Vector3(0, 0, -10), Time.deltaTime);
                     break;
             }
-        }
-
-        private void FindNewSpectatorTarget()
-        {
-            var players = Object.FindObjectsByType<Antigravity.Player.PlayerHealth>(FindObjectsSortMode.None);
-            foreach (var p in players)
-            {
-                if (p.currentHealth > 0)
-                {
-                    cameraFollowTarget = p.transform;
-                    Debug.Log($"[Spectator] Siguiendo ahora a {p.gameObject.name}");
-                    return;
-                }
-            }
-            // No one alive? Go to Overview
-            currentViewState = CameraState.OVERVIEW;
         }
 
         public void SetCameraState(CameraState state, Transform target = null)
@@ -116,39 +100,6 @@ namespace Antigravity.GameMode
             Debug.Log($"[DIAGNOSTIC] Clients in Scene: Local={localPlayers.Length}, Remote={remotePlayers.Length}");
         }
 
-        // CONTROL DE ESPECTADOR
-        if (Antigravity.Auth.GameSession.CurrentGameId != "singleplayer")
-        {
-            CheckSpectatorMode();
-        }
-    }
-
-    private void CheckSpectatorMode()
-    {
-        // Buscamos al jugador local
-        var localPlayer = FindLocalPlayer();
-        if (localPlayer != null && localPlayer.TryGetComponent<PlayerHealth>(out var health))
-        {
-            if (health.currentHealth <= 0)
-            {
-                // Si el local está muerto, buscamos un aliado vivo
-                var camera = FindAnyObjectByType<Antigravity.CameraSystem.CameraFollow>();
-                if (camera != null)
-                {
-                    var remotes = FindObjectsByType<Antigravity.Network.NetworkPlayer>(FindObjectsSortMode.None);
-                    foreach (var r in remotes)
-                    {
-                        // En multijugador, si hay remotes, seguimos al primero que encontremos
-                        if (camera.target != r.transform)
-                        {
-                            Debug.Log($"[MatchManager] Espectador: Cambiando cámara a {r.username}");
-                            camera.target = r.transform;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
     }
 
     private PlayerMovement FindLocalPlayer()
