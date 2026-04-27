@@ -226,7 +226,7 @@ namespace Antigravity.UI
                     var baseMsg = JsonUtility.FromJson<Antigravity.Network.GameOverMessage>(rawMessage);
                     
                     if (baseMsg != null && baseMsg.stats != null) {
-                        Debug.Log($"[InGameUIManager] Stats parseadas correctamente. Cantidad: {baseMsg.stats.Length}");
+                        Debug.Log($"[InGameUIManager] Stats parseadas correctamente. Cantidad: {baseMsg.stats.Count}");
                         ShowMultiplayerStats(baseMsg.stats);
                     } else {
                         Debug.LogError("[InGameUIManager] Error parseando GameOverMessage: baseMsg o stats es null.");
@@ -237,7 +237,7 @@ namespace Antigravity.UI
             }
         }
 
-        private void ShowMultiplayerStats(Antigravity.Network.PlayerStatsData[] stats)
+        private void ShowMultiplayerStats(System.Collections.Generic.List<Antigravity.Network.PlayerStatsData> stats)
         {
             isGameActive = false;
             if (hudInstance != null) hudInstance.style.display = DisplayStyle.None;
@@ -246,6 +246,8 @@ namespace Antigravity.UI
             if (endGameInstance != null)
             {
                 endGameInstance.style.display = DisplayStyle.Flex;
+                if (endGameLayer != null) endGameLayer.style.display = DisplayStyle.Flex;
+                
                 if (finalStatsKills != null)
                 {
                     string summary = "RESULTADOS DE LA INCURSIÓN:\n";
