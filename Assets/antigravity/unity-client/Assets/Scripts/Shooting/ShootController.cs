@@ -17,6 +17,17 @@ namespace Antigravity.Shooting
         public long timestamp;
     }
 
+    [Serializable]
+    public class DisparoRetransmitidoPayload
+    {
+        public string tipo = "disparo_retransmitido";
+        public string jugadorId;
+        public Vector2Payload posicion;
+        public Vector2Payload direccion;
+        public float velocidad;
+        public long timestamp;
+    }
+
     public class ShootController : MonoBehaviour
     {
         public GameObject projectilePrefab;
@@ -121,7 +132,24 @@ namespace Antigravity.Shooting
 
         private void HandleMessage(string message)
         {
-            // Retransmission handling for other players (MOCK for now as this is authoritative)
+            if (message.Contains("\"tipo\":\"disparo_retransmitido\""))
+            {
+                try {
+                    var data = JsonUtility.FromJson<DisparoRetransmitidoPayload>(message);
+                    
+                    // Si el disparo es nuestro, lo ignoramos (ya se predijo el cliente)
+                    if (data.jugadorId != Antigravity.Auth.GameSession.UserId)
+                    {
+                        Vector2 serverPos = new Vector2(data.posicion.x, data.posicion.y);
+                        Vector2 serverDir = new Vector2(data.direccion.x, data.direccion.y);
+                        
+                        // Spawn projectile using network data
+                        SpawnProjectile(data.jugadorId, serverPos, serverDir, data.timestamp);
+                    }
+                } catch (Exception e) {
+                    Debug.LogError("[ShootController] Error parsing remote shoot limit: " + e.Message);
+                }
+            }
         }
     }
 }
