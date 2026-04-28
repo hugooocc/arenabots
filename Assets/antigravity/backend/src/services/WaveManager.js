@@ -108,6 +108,7 @@ class WaveManager {
                 const roomSessions = Array.from(this.players.values()).filter(p => String(p.gameId) === targetId);
                 const roomStats = roomSessions.map(p => ({
                     userId: String(p.playerId),
+                    username: p.username || "Jugador",
                     kills: p.kills,
                     time: Math.floor((Date.now() - p.startTime) / 1000)
                 }));

@@ -335,6 +335,10 @@ namespace Antigravity.UI
         private void HandleEnemyKilled()
         {
             mobsKilled++;
+            if (targetPlayerHealth != null && !targetPlayerHealth.IsAlive && Antigravity.Auth.GameSession.CurrentGameId != "singleplayer") {
+                // Si estoy muerto en multiplayer, dejo mi rótulo de CAÍDO quieto
+                return;
+            }
             if (mobsKilledLabel != null)
             {
                 mobsKilledLabel.text = $"Mobs Killed: {mobsKilled}";
