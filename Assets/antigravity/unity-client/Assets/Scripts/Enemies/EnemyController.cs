@@ -34,10 +34,10 @@ namespace Antigravity.Enemies
             rb = GetComponent<Rigidbody2D>();
             targetPosition = transform.position;
             
-            // Físicas: Rigidbody2D (Dynamic, Gravity: 0, Sleeping Mode: Start Awake)
+            // Físicas: Rigidbody2D (Dynamic, Gravity: 0, Sleeping Mode: NeverSleep para evitar que ignoren colisiones en multi)
             rb.bodyType = RigidbodyType2D.Dynamic;
             rb.gravityScale = 0f;
-            rb.sleepMode = RigidbodySleepMode2D.StartAwake;
+            rb.sleepMode = RigidbodySleepMode2D.NeverSleep;
             rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous; 
             rb.freezeRotation = true; 
 
