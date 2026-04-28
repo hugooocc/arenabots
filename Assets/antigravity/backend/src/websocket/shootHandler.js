@@ -122,18 +122,17 @@ function handleDeath(ws, data, wss, waveManager) {
     if (tipo !== 'player_dead' && tipo !== 'force_game_over') return;
 
     if (tipo === 'force_game_over') {
-        // Ejecutamos la lógica de envío forzado sin revisar el player local
-    } else {
+        // Bypass local player validation if the client explicitly requested a forced global game over
+    } else if (tipo === 'player_dead') {
         const userId = ws.userId;
         console.log(`[DEBUG-GAMEOVER] Recibido player_dead. ws.userId: ${userId}, partidaId: ${partidaId}`);
-        // ... (resto intacto)
     
-        console.log(`[DEBUG-GAMEOVER] Usuario no encontrado en el mapa 'players'. userId: ${userId}, Total en mapa: ${players.size}`);
-        if (userId) console.log("[DEBUG-GAMEOVER] Claves en mapa:", Array.from(players.keys()));
-        return;
-    }
+        if (!userId || !players.has(userId)) {
+            console.log(`[DEBUG-GAMEOVER] Usuario no encontrado en el mapa 'players'. userId: ${userId}, Total en mapa: ${players.size}`);
+            if (userId) console.log("[DEBUG-GAMEOVER] Claves en mapa:", Array.from(players.keys()));
+            return;
+        }
 
-    if (tipo === 'player_dead') {
         const session = players.get(userId);
         if (!session.isAlive) {
             console.log(`[DEBUG-GAMEOVER] El usuario ${userId} ya estaba marcado como muerto.`);
