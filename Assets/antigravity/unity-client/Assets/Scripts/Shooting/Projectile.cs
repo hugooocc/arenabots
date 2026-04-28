@@ -69,18 +69,20 @@ namespace Antigravity.Shooting
                 // Llamar a la función local de daño para feedback visual inmediato (Client-Side Prediction)
                 enemy.TakeDamage(25); 
 
-                // Enviar un payload JSON al servidor mediante NetworkManager
-                ImpactPayload hit = new ImpactPayload {
-                    tipo = "impacto_proyectil",
-                    partidaId = Antigravity.Auth.GameSession.CurrentGameId ?? "singleplayer",
-                    enemigoId = enemy.EnemyId,
-                    dano = 25
-                };
+                // ONLY send hit validation to server if this client owns the bullet
+                if (ownerId == Antigravity.Auth.GameSession.UserId) {
+                    ImpactPayload hit = new ImpactPayload {
+                        tipo = "impacto_proyectil",
+                        partidaId = Antigravity.Auth.GameSession.CurrentGameId ?? "singleplayer",
+                        enemigoId = enemy.EnemyId,
+                        dano = 25
+                    };
 
-                string json = JsonUtility.ToJson(hit);
-                if (NetworkManager.Instance != null)
-                {
-                    NetworkManager.Instance.SendMessage(json);
+                    string json = JsonUtility.ToJson(hit);
+                    if (NetworkManager.Instance != null)
+                    {
+                        NetworkManager.Instance.SendMessage(json);
+                    }
                 }
                 
                 Destroy(gameObject); // El proyectil se destruye al chocar

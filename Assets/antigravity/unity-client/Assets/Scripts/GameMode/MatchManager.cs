@@ -53,44 +53,6 @@ namespace Antigravity.GameMode
             cameraFollowTarget = target;
         }
 
-        private void OnGUI()
-        {
-            // Persistent debug overlay using legacy GUI for guaranteed visibility
-            if (Antigravity.Auth.GameSession.CurrentGameId != "singleplayer")
-            {
-                var allMovements = FindObjectsByType<Antigravity.Player.PlayerMovement>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-                int activeLocalCount = 0;
-                foreach(var m in allMovements) {
-                    // Solo contamos el local real (el que no tiene NetworkPlayer)
-                    if (m.enabled && m.GetComponent<Antigravity.Network.NetworkPlayer>() == null) activeLocalCount++;
-                }
-
-                var remotePlayers = FindObjectsByType<Antigravity.Network.NetworkPlayer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-                string remotePositions = "";
-                foreach (var rp in remotePlayers) {
-                    remotePositions += $"\n  - {rp.username} ({rp.userId}): {rp.transform.position}";
-                }
-
-                PlayerMovement localPlayerObj = null;
-                foreach(var m in allMovements) {
-                    if (m.enabled && m.GetComponent<Antigravity.Network.NetworkPlayer>() == null) {
-                        localPlayerObj = m;
-                        break;
-                    }
-                }
-                string localPosStr = localPlayerObj != null ? localPlayerObj.transform.position.ToString() : "N/A";
-
-                string debugInfo = $"[ARENA BOTS MULTI-DEBUG]\n" +
-                                   $"Local Players: {activeLocalCount} ({localPosStr})\n" +
-                                   $"Remote Players: {remotePlayers.Length}{remotePositions}\n" +
-                                   $"User ID: {Antigravity.Auth.GameSession.UserId}\n" +
-                                   $"Errors: {string.Join(" | ", errorHistory)}";
-
-                GUI.color = Color.yellow;
-                GUI.Label(new Rect(10, 10, 600, 100), debugInfo);
-            }
-        }
-
     private void Update()
     {
         // Camera logic
