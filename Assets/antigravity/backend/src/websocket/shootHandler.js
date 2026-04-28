@@ -121,68 +121,49 @@ function handleDeath(ws, data, wss, waveManager) {
     const { tipo, partidaId } = data;
     if (tipo !== 'player_dead' && tipo !== 'force_game_over') return;
 
-    if (tipo === 'force_game_over') {
-        // Bypass local player validation if the client explicitly requested a forced global game over
-    } else if (tipo === 'player_dead') {
-        const userId = ws.userId;
-        console.log(`[DEBUG-GAMEOVER] Recibido player_dead. ws.userId: ${userId}, partidaId: ${partidaId}`);
+    const userId = ws.userId || data.userId;
+    const targetGameId = String(partidaId || ws.gameId);
+
+    if (tipo === 'player_dead') {
+        console.log(`[DEBUG-GAMEOVER] Recibido player_dead. ws.userId: ${userId}, partidaId: ${targetGameId}`);
     
         if (!userId || !players.has(userId)) {
-            console.log(`[DEBUG-GAMEOVER] Usuario no encontrado en el mapa 'players'. userId: ${userId}, Total en mapa: ${players.size}`);
-            if (userId) console.log("[DEBUG-GAMEOVER] Claves en mapa:", Array.from(players.keys()));
+            console.log(`[DEBUG-GAMEOVER] Usuario no encontrado en el mapa 'players'. userId: ${userId}`);
             return;
         }
 
         const session = players.get(userId);
-        if (!session.isAlive) {
-            console.log(`[DEBUG-GAMEOVER] El usuario ${userId} ya estaba marcado como muerto.`);
-            return;
+        if (session.isAlive) {
+            session.isAlive = false;
+            console.log(`[DEBUG-GAMEOVER] Marcado usuario ${userId} como MUERTO. isAlive ahora es false`);
         }
-        session.isAlive = false;
-        console.log(`[DEBUG-GAMEOVER] Marcado usuario ${userId} como MUERTO. isAlive ahora es ${session.isAlive}`);
+
+        // Informar a los demás que este jugador ha muerto
+        const deathPayload = JSON.stringify({ tipo: 'jugador_muerto', userId });
+        wss.clients.forEach(c => {
+            if (c.readyState === WebSocket.OPEN && String(c.gameId) === targetGameId) {
+                c.send(deathPayload);
+            }
+        });
     }
 
-    const targetGameId = String(partidaId || ws.gameId);
-    
-    // Informar a los demás
-    const deathPayload = JSON.stringify({ tipo: 'jugador_muerto', userId });
-    wss.clients.forEach(c => {
-        if (c.readyState === WebSocket.OPEN && String(c.gameId) === targetGameId) {
-            c.send(deathPayload);
-        }
-    });
-
-    // Comprobar si todos han muerto en esta partida específica
     const searchId = String(targetGameId);
     const roomSessions = Array.from(players.values()).filter(p => String(p.gameId) === searchId);
     const aliveInRoom = roomSessions.filter(p => p.isAlive);
     
-    console.log(`[CRITICAL-DEBUG] Sala: ${searchId}`);
-    console.log(`[CRITICAL-DEBUG] Total en sala: ${roomSessions.length}`);
-    console.log(`[CRITICAL-DEBUG] Vivos: ${aliveInRoom.length}`);
-    roomSessions.forEach(p => console.log(`  - Jugador: ${p.playerId}, isAlive: ${p.isAlive}`));
-    
-    console.log(`[DEBUG-GAMEOVER] Sala: ${searchId}, Sesiones vinculadas: ${roomSessions.length}, Vivos: ${aliveInRoom.length}`);
-    roomSessions.forEach(p => {
-        console.log(`[DEBUG-GAMEOVER] - Jugador ${p.playerId} (Vivo: ${p.isAlive})`);
-    });
-    
-    if (aliveInRoom.length === 0 && roomSessions.length > 0) {
+    // Si todos han muerto, o bien se forzó explícitamente desde el cliente por failsafe
+    if ((aliveInRoom.length === 0 && roomSessions.length > 0) || tipo === 'force_game_over') {
         const room = waveManager.activeGames.get(searchId);
         
-        let gameOverAlready = false;
         if (room) {
-            if (room.gameOverTriggered) {
+            if (room.gameOverTriggered && tipo !== 'force_game_over') {
                 console.log(`[DEBUG-GAMEOVER] Game Over ya disparado activamente para la sala ${searchId}.`);
                 return;
             }
             room.gameOverTriggered = true;
-        } else {
-            console.log(`[DEBUG-GAMEOVER] Sala ${searchId} ya no estaba en waveManager. Forzando el envío del Game Over por seguridad.`);
-            // Si no estaba, seguimos para retransmitir a los clientes de todas formas.
         }
 
-        console.log(`[DEBUG-GAMEOVER] ¡DISPARANDO GAME_OVER PARA ${roomSessions.length} JUGADORES!`);
+        console.log(`[DEBUG-GAMEOVER] ¡DISPARANDO GAME_OVER PARA ${roomSessions.length} JUGADORES! (Razón: ${tipo})`);
         
         const roomStats = roomSessions.map(p => ({
             userId: String(p.playerId),
@@ -199,7 +180,7 @@ function handleDeath(ws, data, wss, waveManager) {
         // Enviar a todos los clientes que pertenezcan a esta sala
         wss.clients.forEach(c => {
             if (String(c.gameId) === searchId && c.readyState === WebSocket.OPEN) {
-                console.log(`[DEBUG-GAMEOVER] Enviando stats a: ${c.userId}`);
+                console.log(`[DEBUG-GAMEOVER] Enviando stats a: ${c.userId || 'cliente_desconocido'}`);
                 c.send(gameOverPayload);
             }
         });
@@ -209,31 +190,6 @@ function handleDeath(ws, data, wss, waveManager) {
         
         const gameService = require('../services/GameService');
         gameService.finishGame(searchId).catch(err => console.error("[CRITICAL] Error en finishGame:", err));
-    } else if (tipo === 'force_game_over') {
-        const searchId = String(partidaId || ws.gameId);
-        console.log(`[DEBUG-GAMEOVER] ¡Failsafe solicitado desde cliente! Disparando GAME_OVER para la sala ${searchId}`);
-        const roomSessions = Array.from(players.values()).filter(p => String(p.gameId) === searchId);
-        
-        const roomStats = roomSessions.map(p => ({
-            userId: String(p.playerId),
-            username: p.username || "Jugador",
-            kills: p.kills,
-            time: Math.floor((Date.now() - p.startTime) / 1000)
-        }));
-
-        const gameOverPayload = JSON.stringify({
-            tipo: 'game_over',
-            stats: roomStats
-        });
-
-        wss.clients.forEach(c => {
-            if (String(c.gameId) === searchId && c.readyState === WebSocket.OPEN) {
-                console.log(`[DEBUG-GAMEOVER] Enviando stats de Failsafe a: ${c.userId}`);
-                c.send(gameOverPayload);
-            }
-        });
-        
-        waveManager.stopGame(searchId);
     } else {
         console.log(`[DEBUG-GAMEOVER] Aún quedan ${aliveInRoom.length} jugadores vivos en la sala.`);
     }

@@ -164,6 +164,9 @@ namespace Antigravity.Network
                 // Trigger animation if animator exists
                 Animator anim = np.GetComponentInChildren<Animator>();
                 if (anim != null) anim.SetTrigger("Die");
+
+                var collider = np.GetComponent<Collider2D>();
+                if (collider != null) collider.enabled = false;
                 
                 Debug.Log($"[MultiplayerSpawner] Remote player DIED: {userId}");
             }

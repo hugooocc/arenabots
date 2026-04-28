@@ -59,6 +59,12 @@ namespace Antigravity.Player
             {
                 animator.SetTrigger(DieHash);
             }
+
+            var movement = GetComponent<PlayerMovement>();
+            if (movement != null) movement.canMove = false;
+
+            var collider = GetComponent<Collider2D>();
+            if (collider != null) collider.enabled = false;
             
             OnPlayerDeath?.Invoke();
             

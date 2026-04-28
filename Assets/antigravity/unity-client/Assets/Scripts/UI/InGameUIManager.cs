@@ -232,12 +232,12 @@ namespace Antigravity.UI
 
             if (localDead && !anyRemoteAlive) {
                 if (diesTimeStamp == 0f) diesTimeStamp = Time.time;
-                // Esperamos 2 segundos
-                if (Time.time - diesTimeStamp > 2f) {
+                // Esperamos 3.5 segundos para dar margen al servidor de enviarlo de forma natural
+                if (Time.time - diesTimeStamp > 3.5f) {
                     failsafeTriggered = true;
-                    Debug.Log("[FAILSAFE] All players dead locally. Requesting final stats to server...");
+                    Debug.Log("[FAILSAFE] Todos los jugadores están muertos localmente. Forzando stats desde el servidor...");
                     
-                    // Pedimos las estadisticas reales al servidor en vez de inventarnos el panel
+                    // Pedimos las estadisticas reales al servidor
                     string jsonInfo = "{\"tipo\":\"force_game_over\",\"partidaId\":\"" + Antigravity.Auth.GameSession.CurrentGameId + "\"}";
                     var nm = Antigravity.Shooting.NetworkManager.Instance;
                     if (nm != null && nm.isActiveAndEnabled) {
