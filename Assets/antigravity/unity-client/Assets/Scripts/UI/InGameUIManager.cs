@@ -219,17 +219,20 @@ namespace Antigravity.UI
 
         private void HandleNetworkMessage(string rawMessage)
         {
-            // Debug.Log("[InGameUIManager] Mensaje recibido: " + rawMessage);
             try {
                 if (rawMessage.Contains("\"tipo\":\"game_over\"")) {
-                    Debug.Log("[InGameUIManager] ¡GAME_OVER detectado en el string del mensaje!");
-                    var baseMsg = JsonUtility.FromJson<Antigravity.Network.GameOverMessage>(rawMessage);
+                    isGameActive = false;
+                    if (hudInstance != null) hudInstance.style.display = DisplayStyle.None;
+                    if (pauseInstance != null) pauseInstance.style.display = DisplayStyle.None;
                     
+                    if (endGameInstance != null) {
+                        endGameInstance.style.display = DisplayStyle.Flex;
+                        if (endGameLayer != null) endGameLayer.style.display = DisplayStyle.Flex;
+                    }
+
+                    var baseMsg = JsonUtility.FromJson<Antigravity.Network.GameOverMessage>(rawMessage);
                     if (baseMsg != null && baseMsg.stats != null) {
-                        Debug.Log($"[InGameUIManager] Stats parseadas correctamente. Cantidad: {baseMsg.stats.Count}");
                         ShowMultiplayerStats(baseMsg.stats);
-                    } else {
-                        Debug.LogError("[InGameUIManager] Error parseando GameOverMessage: baseMsg o stats es null.");
                     }
                 }
             } catch (Exception e) {
@@ -239,21 +242,20 @@ namespace Antigravity.UI
 
         private void ShowMultiplayerStats(System.Collections.Generic.List<Antigravity.Network.PlayerStatsData> stats)
         {
-            isGameActive = false;
-            if (hudInstance != null) hudInstance.style.display = DisplayStyle.None;
-            if (pauseInstance != null) pauseInstance.style.display = DisplayStyle.None;
-            
             if (endGameInstance != null)
             {
-                endGameInstance.style.display = DisplayStyle.Flex;
-                if (endGameLayer != null) endGameLayer.style.display = DisplayStyle.Flex;
                 
                 if (finalStatsKills != null)
                 {
                     string summary = "RESULTADOS DE LA INCURSIÓN:\n";
-                    foreach (var s in stats) {
-                        string displayName = !string.IsNullOrEmpty(s.username) ? s.username : "JUGADOR";
-                        summary += $"\n[OPERADOR: {displayName}] BAJAS: {s.kills} | TIEMPO: {s.time}s";
+                    try {
+                        foreach (var s in stats) {
+                            string displayName = !string.IsNullOrEmpty(s.username) ? s.username : "JUGADOR";
+                            summary += $"\n[OPERADOR: {displayName}] BAJAS: {s.kills} | TIEMPO: {s.time}s";
+                        }
+                    } catch (Exception ex) {
+                        summary += "\n(Error procesando datos)";
+                        Debug.LogError("[ShowMultiplayerStats] Exception: " + ex.Message);
                     }
                     finalStatsKills.text = summary;
                     finalStatsKills.style.unityTextAlign = TextAnchor.MiddleCenter;
