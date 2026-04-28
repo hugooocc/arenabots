@@ -167,18 +167,17 @@ function handleDeath(ws, data, wss, waveManager) {
     if (aliveInRoom.length === 0 && roomSessions.length > 0) {
         const room = waveManager.activeGames.get(searchId);
         
-        // FAIL-SAFE: Si la sala no está en activeGames hoy, pero los jugadores están aquí, 
-        // igual deberíamos intentar enviar el Game Over si no se ha enviado ya.
-        if (!room) {
-            console.log(`[DEBUG-GAMEOVER] Sala ${searchId} no encontrada en waveManager. ¿Ya finalizó?`);
-            return;
+        let gameOverAlready = false;
+        if (room) {
+            if (room.gameOverTriggered) {
+                console.log(`[DEBUG-GAMEOVER] Game Over ya disparado activamente para la sala ${searchId}.`);
+                return;
+            }
+            room.gameOverTriggered = true;
+        } else {
+            console.log(`[DEBUG-GAMEOVER] Sala ${searchId} ya no estaba en waveManager. Forzando el envío del Game Over por seguridad.`);
+            // Si no estaba, seguimos para retransmitir a los clientes de todas formas.
         }
-
-        if (room.gameOverTriggered) {
-            console.log(`[DEBUG-GAMEOVER] Game Over ya disparado anteriormente para la sala ${searchId}.`);
-            return;
-        }
-        room.gameOverTriggered = true;
 
         console.log(`[DEBUG-GAMEOVER] ¡DISPARANDO GAME_OVER PARA ${roomSessions.length} JUGADORES!`);
         
