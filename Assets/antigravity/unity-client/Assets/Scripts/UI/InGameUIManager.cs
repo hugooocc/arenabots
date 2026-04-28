@@ -232,27 +232,17 @@ namespace Antigravity.UI
 
             if (localDead && !anyRemoteAlive) {
                 if (diesTimeStamp == 0f) diesTimeStamp = Time.time;
-                // Esperamos 2 segundos de cortesía para ver si llega el JSON nativamente
+                // Esperamos 2 segundos
                 if (Time.time - diesTimeStamp > 2f) {
                     failsafeTriggered = true;
-                    Debug.Log("[FAILSAFE] All players dead locally. Forcing Game Over screen!");
+                    Debug.Log("[FAILSAFE] All players dead locally. Requesting final stats to server...");
                     
-                    isGameActive = false;
-                    if (hudInstance != null) hudInstance.style.display = DisplayStyle.None;
-                    if (pauseInstance != null) pauseInstance.style.display = DisplayStyle.None;
-                    
-                    if (endGameInstance != null) {
-                        endGameInstance.style.display = DisplayStyle.Flex;
-                        if (endGameLayer != null) endGameLayer.style.display = DisplayStyle.Flex;
+                    // Pedimos las estadisticas reales al servidor en vez de inventarnos el panel
+                    string jsonInfo = "{\"tipo\":\"force_game_over\",\"partidaId\":\"" + Antigravity.Auth.GameSession.CurrentGameId + "\"}";
+                    var nm = Antigravity.Shooting.NetworkManager.Instance;
+                    if (nm != null && nm.isActiveAndEnabled) {
+                        nm.SendMessage(jsonInfo);
                     }
-                    if (finalStatsKills != null && !finalStatsKills.text.Contains("RESULTADOS")) {
-                        finalStatsKills.text = "RESULTADOS (Recuperación Local):\n[OPERADOR: JUGADOR] BAJAS: " + mobsKilled;
-                        finalStatsKills.style.unityTextAlign = TextAnchor.MiddleCenter;
-                    }
-
-                    // Force overview camera
-                    var mm = FindFirstObjectByType<Antigravity.GameMode.MatchManager>();
-                    if (mm != null) mm.SetCameraState(Antigravity.GameMode.MatchManager.CameraState.OVERVIEW);
                 }
             } else {
                 diesTimeStamp = 0f; // Reset if someone revived (impossible but safe)
@@ -272,7 +262,7 @@ namespace Antigravity.UI
         private void HandleNetworkMessage(string rawMessage)
         {
             try {
-                if (rawMessage.Contains("\"tipo\":\"game_over\"")) {
+                if (rawMessage.Contains("game_over")) {
                     isGameActive = false;
                     if (hudInstance != null) hudInstance.style.display = DisplayStyle.None;
                     if (pauseInstance != null) pauseInstance.style.display = DisplayStyle.None;
@@ -303,7 +293,7 @@ namespace Antigravity.UI
                     try {
                         foreach (var s in stats) {
                             string displayName = !string.IsNullOrEmpty(s.username) ? s.username : "JUGADOR";
-                            summary += $"\n[OPERADOR: {displayName}] BAJAS: {s.kills} | TIEMPO: {s.time}s";
+                            summary += $"\n{displayName}: {s.kills} Bajas | {s.time}s";
                         }
                     } catch (Exception ex) {
                         summary += "\n(Error procesando datos)";
