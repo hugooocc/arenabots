@@ -154,6 +154,16 @@ namespace Antigravity.UI
             isGameActive = false; // El cronómetro empieza parado hasta que termine la cuenta atrás
             if (mobsKilledLabel != null) mobsKilledLabel.text = "Mobs Killed: 0";
             UpdateTimerDisplay();
+
+            // Re-subscribe in Start to guarantee NetworkManager is initialized
+            var nm = Antigravity.Shooting.NetworkManager.Instance ?? FindFirstObjectByType<Antigravity.Shooting.NetworkManager>();
+            if (nm != null) {
+                nm.OnMessageReceived -= HandleNetworkMessage;
+                nm.OnMessageReceived += HandleNetworkMessage;
+                Debug.Log("[InGameUIManager] Configuración de Red inicializada correctamente.");
+            } else {
+                Debug.LogWarning("[InGameUIManager] NetworkManager no encontrado en Start.");
+            }
         }
 
         public void SetGameActive(bool active)
@@ -263,8 +273,10 @@ namespace Antigravity.UI
         {
             try {
                 if (rawMessage.Contains("game_over")) {
+                    Debug.Log("[InGameUIManager] Entrando a HandleNetworkMessage para: " + rawMessage);
                     isGameActive = false;
                     if (hudInstance != null) hudInstance.style.display = DisplayStyle.None;
+                    if (gameHudLayer != null) gameHudLayer.style.display = DisplayStyle.None;
                     if (pauseInstance != null) pauseInstance.style.display = DisplayStyle.None;
                     
                     if (endGameInstance != null) {
@@ -275,6 +287,8 @@ namespace Antigravity.UI
                     var baseMsg = JsonUtility.FromJson<Antigravity.Network.GameOverMessage>(rawMessage);
                     if (baseMsg != null && baseMsg.stats != null) {
                         ShowMultiplayerStats(baseMsg.stats);
+                    } else {
+                        Debug.LogWarning("[InGameUIManager] stats era nulo en el parsing o baseMsg era null");
                     }
                 }
             } catch (Exception e) {
@@ -282,7 +296,7 @@ namespace Antigravity.UI
             }
         }
 
-        private void ShowMultiplayerStats(System.Collections.Generic.List<Antigravity.Network.PlayerStatsData> stats)
+        private void ShowMultiplayerStats(Antigravity.Network.PlayerStatsData[] stats)
         {
             if (endGameInstance != null)
             {

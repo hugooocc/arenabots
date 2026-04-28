@@ -74,6 +74,6 @@ namespace Antigravity.Network
     public class GameOverMessage
     {
         public string tipo;
-        public List<PlayerStatsData> stats;
+        public PlayerStatsData[] stats;
     }
 }
