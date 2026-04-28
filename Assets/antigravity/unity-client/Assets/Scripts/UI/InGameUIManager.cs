@@ -205,6 +205,58 @@ namespace Antigravity.UI
             {
                 FindAndSubscribePlayerHealth();
             }
+
+            CheckLocalGameOverFailsafe();
+        }
+
+        private bool failsafeTriggered = false;
+        private float diesTimeStamp = 0f;
+
+        private void CheckLocalGameOverFailsafe()
+        {
+            if (failsafeTriggered || !isGameActive) return;
+            if (Antigravity.Auth.GameSession.CurrentGameId == "singleplayer") return;
+
+            // Wait until player and target are found
+            if (targetPlayerHealth == null) return;
+            
+            bool localDead = !targetPlayerHealth.IsAlive;
+            
+            var remotes = FindObjectsByType<Antigravity.Network.NetworkPlayer>(FindObjectsSortMode.None);
+            if (remotes.Length == 0) return; // Haven't spawned yet
+
+            bool anyRemoteAlive = false;
+            foreach (var r in remotes) {
+                if (r.IsAlive) anyRemoteAlive = true;
+            }
+
+            if (localDead && !anyRemoteAlive) {
+                if (diesTimeStamp == 0f) diesTimeStamp = Time.time;
+                // Esperamos 2 segundos de cortesía para ver si llega el JSON nativamente
+                if (Time.time - diesTimeStamp > 2f) {
+                    failsafeTriggered = true;
+                    Debug.Log("[FAILSAFE] All players dead locally. Forcing Game Over screen!");
+                    
+                    isGameActive = false;
+                    if (hudInstance != null) hudInstance.style.display = DisplayStyle.None;
+                    if (pauseInstance != null) pauseInstance.style.display = DisplayStyle.None;
+                    
+                    if (endGameInstance != null) {
+                        endGameInstance.style.display = DisplayStyle.Flex;
+                        if (endGameLayer != null) endGameLayer.style.display = DisplayStyle.Flex;
+                    }
+                    if (finalStatsKills != null && !finalStatsKills.text.Contains("RESULTADOS")) {
+                        finalStatsKills.text = "RESULTADOS (Recuperación Local):\n[OPERADOR: JUGADOR] BAJAS: " + mobsKilled;
+                        finalStatsKills.style.unityTextAlign = TextAnchor.MiddleCenter;
+                    }
+
+                    // Force overview camera
+                    var mm = FindFirstObjectByType<Antigravity.GameMode.MatchManager>();
+                    if (mm != null) mm.SetCameraState(Antigravity.GameMode.MatchManager.CameraState.OVERVIEW);
+                }
+            } else {
+                diesTimeStamp = 0f; // Reset if someone revived (impossible but safe)
+            }
         }
 
         private void UpdateTimerDisplay()
