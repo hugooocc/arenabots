@@ -252,8 +252,8 @@ namespace Antigravity.UI
                 {
                     string summary = "RESULTADOS DE LA INCURSIÓN:\n";
                     foreach (var s in stats) {
-                        string shortId = s.userId != null && s.userId.Length > 6 ? s.userId.Substring(0, 6) : "USER";
-                        summary += $"\n[ID: {shortId}] BAJAS: {s.kills} | TIEMPO: {s.time}s";
+                        string displayName = !string.IsNullOrEmpty(s.username) ? s.username : "JUGADOR";
+                        summary += $"\n[OPERADOR: {displayName}] BAJAS: {s.kills} | TIEMPO: {s.time}s";
                     }
                     finalStatsKills.text = summary;
                     finalStatsKills.style.unityTextAlign = TextAnchor.MiddleCenter;

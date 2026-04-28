@@ -97,7 +97,9 @@ namespace Antigravity.Shooting
             websocket.OnMessage += (bytes) =>
             {
                 var message = System.Text.Encoding.UTF8.GetString(bytes);
-                // Debug.Log("Received: " + message); // Desactivado para reducir spam
+                if (message.Contains("game_over")) Debug.Log("[VERIFICACIÓN CRÍTICA] Payload recibido íntegro: " + message);
+                // Si la string raw pasa...
+
                 
                 WSMessage data = JsonUtility.FromJson<WSMessage>(message);
                 if (data.tipo == "game_started")

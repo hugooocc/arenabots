@@ -65,6 +65,7 @@ namespace Antigravity.Network
     public class PlayerStatsData
     {
         public string userId;
+        public string username;
         public int kills;
         public int time;
     }

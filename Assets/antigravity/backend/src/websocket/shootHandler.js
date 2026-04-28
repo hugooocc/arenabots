@@ -184,6 +184,7 @@ function handleDeath(ws, data, wss, waveManager) {
         
         const roomStats = roomSessions.map(p => ({
             userId: String(p.playerId),
+            username: p.username || "Jugador",
             kills: p.kills,
             time: Math.floor((Date.now() - p.startTime) / 1000)
         }));
